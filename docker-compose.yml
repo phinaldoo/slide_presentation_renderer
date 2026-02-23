@@ -1,0 +1,65 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: slide-renderer-backend:latest
+    environment:
+      ENABLE_DOCS: ${ENABLE_DOCS:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      API_KEY_AUTH_ENABLED: ${API_KEY_AUTH_ENABLED:-true}
+      API_KEYS: '${API_KEYS:?Set API_KEYS in .env (16+ chars random)}'
+      RENDER_TIMEOUT_SECONDS: ${RENDER_TIMEOUT_SECONDS:-180}
+      MAX_CONCURRENT_RENDERS: ${MAX_CONCURRENT_RENDERS:-2}
+      MAX_HTML_CHARS: ${MAX_HTML_CHARS:-2000000}
+      MAX_INPUT_FILES: ${MAX_INPUT_FILES:-32}
+      MAX_ASSET_BYTES: ${MAX_ASSET_BYTES:-25000000}
+      MAX_TOTAL_ASSET_BYTES: ${MAX_TOTAL_ASSET_BYTES:-120000000}
+    expose:
+      - "8000"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+      - /dev/shm:size=512m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: slide-renderer-nginx:latest
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${NGINX_PORT:-8080}:8080"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /var/cache/nginx:size=64m
+      - /var/run:size=1m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

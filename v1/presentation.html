@@ -1,0 +1,2302 @@
+```html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bildungsgerechtigkeit in Deutschland</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a365d;
+            --primary-light: #2c5282;
+            --secondary: #4a5568;
+            --secondary-light: #718096;
+            --accent: #ed8936;
+            --accent-light: #f6ad55;
+            --bg: #f7fafc;
+            --bg-dark: #edf2f7;
+            --white: #ffffff;
+            --text: #1a202c;
+            --text-light: #4a5568;
+            --success: #38a169;
+            --warning: #dd6b20;
+            --info: #3182ce;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .slide {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            background: var(--white);
+            box-sizing: border-box;
+            margin-bottom: 2px;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        h1 {
+            font-size: 84px;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 56px;
+            line-height: 1.2;
+        }
+
+        h3 {
+            font-size: 36px;
+            line-height: 1.3;
+        }
+
+        h4 {
+            font-size: 28px;
+            line-height: 1.4;
+        }
+
+        p, li {
+            font-size: 26px;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        .hero-slide {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #2b6cb0 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-slide h1 {
+            color: var(--white);
+            font-size: 96px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-slide .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 36px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-slide .accent-bar {
+            width: 200px;
+            height: 6px;
+            background: var(--accent);
+            margin: 40px 0;
+            border-radius: 3px;
+        }
+
+        .slide-header {
+            padding: 60px 100px 40px;
+            border-bottom: 3px solid var(--bg-dark);
+        }
+
+        .slide-content {
+            padding: 50px 100px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 50px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+        }
+
+        .card {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 40px;
+            border-left: 5px solid var(--accent);
+        }
+
+        .card-primary {
+            border-left-color: var(--primary);
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .card-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--white);
+        }
+
+        .card-icon-accent {
+            background: var(--accent);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--white);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+        }
+
+        .highlight-box h3 {
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+
+        .highlight-box p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 72px;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 22px;
+            color: var(--secondary);
+            margin-top: 10px;
+        }
+
+        .list-styled {
+            list-style: none;
+        }
+
+        .list-styled li {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 20px;
+        }
+
+        .list-styled li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .comparison-box {
+            display: flex;
+            gap: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .comparison-side {
+            flex: 1;
+            padding: 50px;
+        }
+
+        .comparison-left {
+            background: var(--bg-dark);
+        }
+
+        .comparison-right {
+            background: var(--primary);
+        }
+
+        .comparison-right h4, .comparison-right p {
+            color: var(--white);
+        }
+
+        .comparison-right .list-styled li::before {
+            background: var(--accent);
+        }
+
+        .comparison-right .list-styled li {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .arrow-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent);
+            width: 80px;
+        }
+
+        .arrow-divider svg {
+            width: 40px;
+            height: 40px;
+            fill: var(--white);
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            padding: 60px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--bg-dark);
+            transform: translateY(-50%);
+        }
+
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .timeline-dot {
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .factor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+        }
+
+        .factor-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 5px solid var(--primary);
+        }
+
+        .factor-card.social {
+            border-top-color: #38a169;
+        }
+
+        .factor-card.family {
+            border-top-color: #805ad5;
+        }
+
+        .factor-card.structural {
+            border-top-color: #dd6b20;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 8px 20px;
+            background: var(--bg-dark);
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tag-accent {
+            background: var(--accent);
+            color: var(--white);
+        }
+
+        .quote-box {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 50px 60px;
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .quote-box::before {
+            content: '"';
+            font-family: 'Montserrat', sans-serif;
+            font-size: 120px;
+            color: var(--accent);
+            position: absolute;
+            top: 10px;
+            left: 30px;
+            line-height: 1;
+            opacity: 0.3;
+        }
+
+        .quote-text {
+            font-size: 32px;
+            font-style: italic;
+            color: var(--primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-source {
+            font-size: 20px;
+            color: var(--secondary-light);
+            margin-top: 20px;
+        }
+
+        .diagram-bar {
+            margin: 30px 0;
+        }
+
+        .bar-label {
+            font-size: 22px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar-track {
+            height: 40px;
+            background: var(--bg-dark);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 20px;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .section-intro {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 180px;
+            font-weight: 800;
+            color: var(--accent);
+            opacity: 0.2;
+            line-height: 1;
+            position: absolute;
+            top: 60px;
+            right: 100px;
+        }
+
+        .icon-grid {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .icon-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg);
+            padding: 20px 30px;
+            border-radius: 12px;
+        }
+
+        .icon-item svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--primary);
+        }
+
+        .solution-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            height: 100%;
+        }
+
+        .solution-number {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .country-card {
+            background: var(--white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .country-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .country-flag {
+            font-size: 60px;
+            margin-bottom: 16px;
+        }
+
+        .country-header h3 {
+            color: var(--white);
+            margin: 0;
+        }
+
+        .country-body {
+            padding: 40px;
+        }
+
+        .takeaway-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+        }
+
+        .takeaway-number {
+            width: 70px;
+            height: 70px;
+            background: var(--accent);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .takeaway-content h4 {
+            color: var(--white);
+            margin-bottom: 10px;
+        }
+
+        .takeaway-content p {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .source-list {
+            column-count: 2;
+            column-gap: 60px;
+        }
+
+        .source-list p {
+            font-size: 18px;
+            margin-bottom: 12px;
+            break-inside: avoid;
+        }
+
+        .visual-circles {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 60px 0;
+        }
+
+        .visual-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .visual-circle.large {
+            width: 280px;
+            height: 280px;
+        }
+
+        .visual-circle h4 {
+            color: var(--white);
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .visual-circle p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            margin-top: 8px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--bg);
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .pill-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-40 {
+            margin-top: 40px;
+        }
+
+        .mb-40 {
+            margin-bottom: 40px;
+        }
+
+        .accent-line {
+            width: 100px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .law-card {
+            background: var(--bg);
+            border-radius: 16px;
+            padding: 30px;
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .law-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .law-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--white);
+        }
+
+        .example-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 20px;
+            padding: 50px;
+            border-left: 6px solid var(--accent);
+        }
+
+        .example-box h4 {
+            color: var(--warning);
+            margin-bottom: 20px;
+        }
+
+        .two-children {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .child-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .vs-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .agenda-item {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 30px 0;
+            border-bottom: 2px solid var(--bg-dark);
+        }
+
+        .agenda-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .agenda-text h4 {
+            margin-bottom: 6px;
+        }
+
+        .agenda-text p {
+            font-size: 20px;
+        }
+
+        .indicator-row {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 25px 0;
+            border-bottom: 2px solid var(--bg-dark);
+        }
+
+        .indicator-label {
+            width: 350px;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        .indicator-bars {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mini-bar {
+            height: 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding-left: 16px;
+            color: var(--white);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .discussion-card {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .question-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .question-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--white);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Hero -->
+<section class="slide hero-slide">
+    <h1>Bildungsgerechtigkeit<br>in Deutschland</h1>
+    <div class="accent-bar"></div>
+    <p class="subtitle">Haben wirklich alle die gleichen Chancen?</p>
+    <p class="subtitle" style="margin-top: 30px; font-size: 24px; opacity: 0.8;">Wissenschaftswoche 2026</p>
+</section>
+
+<!-- Slide 2: Hook - Example -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Ein Beispiel aus dem Alltag</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="two-children">
+            <div class="child-card">
+                <h3 style="color: var(--primary);">Kind A</h3>
+                <p style="margin-top: 20px;"><strong>Muttersprache:</strong> Deutsch</p>
+                <p><strong>Schulbesuch:</strong> 10 Jahre in Deutschland</p>
+                <p><strong>Voraussetzungen:</strong> Vertraut mit dem System</p>
+            </div>
+            <div class="vs-circle">VS</div>
+            <div class="child-card">
+                <h3 style="color: var(--accent);">Kind B</h3>
+                <p style="margin-top: 20px;"><strong>Muttersprache:</strong> Ukrainisch</p>
+                <p><strong>Schulbesuch:</strong> 1 Jahr in Deutschland</p>
+                <p><strong>Voraussetzungen:</strong> Muss Deutsch lernen</p>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 60px;">
+            <h3 style="font-size: 42px;">Beide bekommen die gleichen Aufgaben – aber haben unterschiedliche Voraussetzungen</h3>
+            <p style="font-size: 32px; margin-top: 20px;">Haben wirklich alle die gleichen Chancen?</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 3: Agenda -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Agenda</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="agenda-item">
+            <div class="agenda-number">1</div>
+            <div class="agenda-text">
+                <h4>Einführung & Grundlagen</h4>
+                <p>Warum Bildung wichtig ist, Begriffe und rechtlicher Rahmen (David)</p>
+            </div>
+        </div>
+        <div class="agenda-item">
+            <div class="agenda-number">2</div>
+            <div class="agenda-text">
+                <h4>Soziale Faktoren</h4>
+                <p>Migrationshintergrund, Geschlecht, Diskriminierung, Mobbing (Nico)</p>
+            </div>
+        </div>
+        <div class="agenda-item">
+            <div class="agenda-number">3</div>
+            <div class="agenda-text">
+                <h4>Familiäre Faktoren</h4>
+                <p>Bildungsstand der Eltern, Einkommen, Familienstruktur (Helena)</p>
+            </div>
+        </div>
+        <div class="agenda-item">
+            <div class="agenda-number">4</div>
+            <div class="agenda-text">
+                <h4>Strukturelle Faktoren</h4>
+                <p>Schulsystem, Ausstattung, Lehrkräfte, Förderung (Lilli)</p>
+            </div>
+        </div>
+        <div class="agenda-item">
+            <div class="agenda-number">5</div>
+            <div class="agenda-text">
+                <h4>Lösungsansätze</h4>
+                <p>Bestehende Maßnahmen, Reformvorschläge, internationale Vergleiche (Nick)</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 4: Warum Bildung wichtig ist -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Warum ist Bildung wichtig?</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <h4>Individuelle Ebene</h4>
+                <ul class="list-styled" style="margin-top: 20px;">
+                    <li>Selbstverwirklichung</li>
+                    <li>Persönlichkeitsentwicklung</li>
+                    <li>Talente entdecken</li>
+                    <li>Kritisch denken</li>
+                    <li>Selbstbestimmt leben</li>
+                </ul>
+            </div>
+            <div class="card card-primary">
+                <div class="card-icon card-icon-accent">
+                    <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                </div>
+                <h4>Ökonomische Ebene</h4>
+                <ul class="list-styled" style="margin-top: 20px;">
+                    <li>Berufsaussichten</li>
+                    <li>Einkommen</li>
+                    <li>Finanzielle Unabhängigkeit</li>
+                    <li>Arbeitsplatzsicherheit</li>
+                    <li>Karrierechancen</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-icon" style="background: #38a169;">
+                    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                </div>
+                <h4>Gesellschaftliche Ebene</h4>
+                <ul class="list-styled" style="margin-top: 20px;">
+                    <li>Politische Mitbestimmung</li>
+                    <li>Soziale Verantwortung</li>
+                    <li>Kulturelle Teilhabe</li>
+                    <li>Demokratiefähigkeit</li>
+                    <li>Zukunftsfähigkeit</li>
+                </ul>
+            </div>
+        </div>
+        <div class="quote-box" style="margin-top: 50px;">
+            <p class="quote-text">Bildung ist der Schlüssel zu eigenem Leben und Selbstverwirklichung.</p>
+            <p class="quote-source">– Bundeszentrale für politische Bildung</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 5: Begriffe - Bildungsgerechtigkeit -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Was ist Bildungsgerechtigkeit?</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <div class="quote-box">
+                    <p class="quote-text" style="font-size: 28px;">Bildungsgerechtigkeit bezeichnet das Ideal eines von individuellen Faktoren wie Gender, ethnischer oder sozialer Herkunft, ökonomischer Leistungsfähigkeit unabhängigen Bildungssystems.</p>
+                    <p class="quote-source">– Prof. Dr. Josef Schmid, Universität Tübingen</p>
+                </div>
+                <div class="card" style="margin-top: 40px;">
+                    <h4>Zentrale Merkmale</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Gleiche Teilhabe unabhängig von Herkunft</li>
+                        <li>Entfaltung individueller Potenziale</li>
+                        <li>Beseitigung sozial bedingter Bildungsschranken</li>
+                        <li>Erfolg entsprechend Fähigkeiten und Anstrengung</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Formen der Gerechtigkeit</h3>
+                <div class="card" style="margin-bottom: 20px; border-left-color: var(--primary);">
+                    <h4>Chancengerechtigkeit</h4>
+                    <p>Faire Startbedingungen, berücksichtigt individuelle Bedürfnisse</p>
+                </div>
+                <div class="card" style="margin-bottom: 20px; border-left-color: #38a169;">
+                    <h4>Leistungsgerechtigkeit</h4>
+                    <p>Faire Bewertung – wer mehr leistet, erhält mehr</p>
+                </div>
+                <div class="card" style="margin-bottom: 20px; border-left-color: #805ad5;">
+                    <h4>Bedarfsgerechtigkeit</h4>
+                    <p>Unterstützung für Bedürftige, Grundbedürfnisse abgedeckt</p>
+                </div>
+                <div class="card" style="border-left-color: #dd6b20;">
+                    <h4>Generationengerechtigkeit</h4>
+                    <p>Faire Verteilung zwischen heutigen und zukünftigen Generationen</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 6: Chancengleichheit vs. Chancengerechtigkeit -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Chancengleichheit vs. Chancengerechtigkeit</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="comparison-box">
+            <div class="comparison-side comparison-left">
+                <h3 style="color: var(--secondary);">Chancengleichheit</h3>
+                <ul class="list-styled" style="margin-top: 30px;">
+                    <li>Gleiche Startbedingungen für alle</li>
+                    <li>Jeder hat die gleichen Möglichkeiten</li>
+                    <li>KEINE Berücksichtigung individueller Talente</li>
+                    <li>Formale Gleichbehandlung</li>
+                </ul>
+            </div>
+            <div class="arrow-divider">
+                <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+            </div>
+            <div class="comparison-side comparison-right">
+                <h3>Chancengerechtigkeit</h3>
+                <ul class="list-styled" style="margin-top: 30px;">
+                    <li>Faire Startbedingungen je nach Bedarf</li>
+                    <li>Berücksichtigt individuelle Stärken</li>
+                    <li>GLEICHT Nachteile aktiv aus</li>
+                    <li>Substanzielle Gleichbehandlung</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 60px;">
+            <h3 style="font-size: 38px;">„Wer Ungleiche gleichbehandelt, kann den Anspruch auf Chancengleichheit nicht einlösen."</h3>
+            <p style="font-size: 24px; margin-top: 16px; opacity: 0.9;">Es bedarf individualisierender Wege der Förderung.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 7: Gerechtigkeit != Gleichheit -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Gerechtigkeit ≠ Gleichheit</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2" style="align-items: center;">
+            <div>
+                <div class="card" style="margin-bottom: 40px;">
+                    <h3 style="color: var(--secondary);">Gleichheit</h3>
+                    <p style="font-size: 32px; margin-top: 20px;">Alle bekommen das Gleiche</p>
+                    <div style="margin-top: 30px; display: flex; gap: 20px;">
+                        <div style="width: 80px; height: 80px; background: var(--bg-dark); border-radius: 8px;"></div>
+                        <div style="width: 80px; height: 80px; background: var(--bg-dark); border-radius: 8px;"></div>
+                        <div style="width: 80px; height: 80px; background: var(--bg-dark); border-radius: 8px;"></div>
+                    </div>
+                </div>
+                <div class="card" style="border-left-color: var(--accent);">
+                    <h3 style="color: var(--accent);">Gerechtigkeit</h3>
+                    <p style="font-size: 32px; margin-top: 20px;">Individuelle Unterstützung je nach Bedarf</p>
+                    <div style="margin-top: 30px; display: flex; gap: 20px; align-items: flex-end;">
+                        <div style="width: 60px; height: 60px; background: var(--accent); border-radius: 8px;"></div>
+                        <div style="width: 80px; height: 80px; background: var(--accent); border-radius: 8px;"></div>
+                        <div style="width: 100px; height: 100px; background: var(--accent); border-radius: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="highlight-box">
+                    <h3>Kernaussage</h3>
+                    <p style="font-size: 32px; margin-top: 30px;">Alle gleich behandeln ≠ alle fair behandeln</p>
+                </div>
+                <div class="card" style="margin-top: 40px;">
+                    <h4>Das bedeutet für die Praxis:</h4>
+                    <ul class="list-styled" style="margin-top: 20px;">
+                        <li>Defizite aktiv ausgleichen</li>
+                        <li>Nicht nur gleichmäßig verteilen</li>
+                        <li>Individuelle Förderbedarfe erkennen</li>
+                        <li>Unterschiedliche Unterstützung bieten</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 8: Rechtlicher Rahmen - International -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Rechtlicher Rahmen – International</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <div class="law-card" style="margin-bottom: 30px;">
+                    <div class="law-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <div>
+                        <h4>UN-Menschenrechtserklärung (1948)</h4>
+                        <p style="font-size: 22px; margin-top: 8px;">Artikel 26, Absatz 1: „Jeder hat das Recht auf Bildung."</p>
+                    </div>
+                </div>
+                <div class="law-card">
+                    <div class="law-icon" style="background: #38a169;">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                    </div>
+                    <div>
+                        <h4>UN-Kinderrechtskonvention</h4>
+                        <p style="font-size: 22px; margin-top: 8px;">Recht auf Bildung für alle, ohne Diskriminierung (Art. 2)</p>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="quote-box">
+                    <p class="quote-text">„Die Vertragsstaaten treffen alle geeigneten Maßnahmen, um sicherzustellen, dass das Kind vor allen Formen der Diskriminierung geschützt wird."</p>
+                    <p class="quote-source">– UN-Kinderrechtskonvention, Art. 2 Abs. 2</p>
+                </div>
+                <div class="card" style="margin-top: 40px;">
+                    <h4>Historischer Kontext</h4>
+                    <p style="margin-top: 16px;">Bereits in der Aufklärung (17. Jh.) gefordert, heute in den Grundrechtstexten der Verfassungen westlicher Demokratien verankert.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 9: Rechtlicher Rahmen - Deutschland -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Rechtlicher Rahmen – Deutschland</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="quote-box" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);">
+            <p class="quote-text" style="color: var(--white);">Artikel 3 Grundgesetz: Alle Menschen sind vor dem Gesetz gleich.</p>
+            <p class="quote-source" style="color: rgba(255,255,255,0.8);">Niemand darf wegen Geschlecht, Abstammung, Rasse, Sprache, Heimat, Herkunft, Glauben, religiöser oder politischer Anschauungen benachteiligt oder bevorzugt werden.</p>
+        </div>
+        <div class="grid-3" style="margin-top: 50px;">
+            <div class="stat-card">
+                <div class="stat-number">16</div>
+                <div class="stat-label">Bundesländer mit unterschiedlichen Schulsystemen</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">Art. 3</div>
+                <div class="stat-label">Grundgesetz garantiert Gleichheit</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">UN-BRK</div>
+                <div class="stat-label">Behindertenrechtskonvention für Inklusion</div>
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top: 50px;">
+            <div class="card">
+                <h4>Rechtliche Garantien</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Recht auf Bildung (Landesverfassungen)</li>
+                    <li>Schulpflicht – Bildung unabhängig von Elternwillen</li>
+                    <li>Inklusionsgesetze (UN-Behindertenrechtskonvention)</li>
+                    <li>Nachteilsausgleich bei Behinderung</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: var(--accent);">
+                <h4>Umsetzungsherausforderungen</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Rechtliche Gleichstellung ≠ gleiche Chancen</li>
+                    <li>Umsetzung stark abhängig vom Bundesland</li>
+                    <li>Föderalismus erschwert einheitliche Standards</li>
+                    <li>Finanzierung variiert zwischen Kommunen</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 10: Section Divider - Ursachenanalyse -->
+<section class="slide section-intro">
+    <span class="section-number">02</span>
+    <div class="slide-content">
+        <h2 style="font-size: 72px;">Ursachenanalyse</h2>
+        <p style="font-size: 32px; margin-top: 30px; max-width: 800px;">Warum gibt es Bildungsungleichheiten? Eine mehrdimensionale Betrachtung.</p>
+        <div class="visual-circles" style="justify-content: flex-start; padding: 40px 0;">
+            <div class="visual-circle" style="background: #38a169;">
+                <h4>Soziale Faktoren</h4>
+            </div>
+            <div class="visual-circle" style="background: #805ad5;">
+                <h4>Familiäre Faktoren</h4>
+            </div>
+            <div class="visual-circle" style="background: #dd6b20;">
+                <h4>Strukturelle Faktoren</h4>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 11: Soziale Faktoren - Übersicht -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Soziale Faktoren</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-4">
+            <div class="factor-card social">
+                <div class="card-icon" style="background: #38a169; width: 60px; height: 60px; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" style="width: 30px; height: 30px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                </div>
+                <h4>Migrationshintergrund</h4>
+                <p style="margin-top: 12px;">Eigene Erfahrungen und Herausforderungen</p>
+            </div>
+            <div class="factor-card social">
+                <div class="card-icon" style="background: #38a169; width: 60px; height: 60px; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" style="width: 30px; height: 30px;"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                </div>
+                <h4>Geschlecht</h4>
+                <p style="margin-top: 12px;">Rollenbilder und Stereotypen</p>
+            </div>
+            <div class="factor-card social">
+                <div class="card-icon" style="background: #38a169; width: 60px; height: 60px; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" style="width: 30px; height: 30px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                </div>
+                <h4>Einschränkungen</h4>
+                <p style="margin-top: 12px;">Physische und psychische Barrieren</p>
+            </div>
+            <div class="factor-card social">
+                <div class="card-icon" style="background: #38a169; width: 60px; height: 60px; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" style="width: 30px; height: 30px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                </div>
+                <h4>Mobbing</h4>
+                <p style="margin-top: 12px;">Schlechtes Lernklima und Auswirkungen</p>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 50px;">
+            <h3>Wichtige Erkenntnis</h3>
+            <p style="font-size: 28px; margin-top: 16px;">Diskriminierung ist zwar in Einzelfällen vorhanden, aber nicht die Hauptursache dafür, dass Migranten schlechter abschneiden. Der sozioökonomische Hintergrund ist bedeutsamer.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 12: Migrationshintergrund -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Migrationshintergrund im Schulkontext</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Diskriminierungserfahrungen</h3>
+                <div class="stat-card" style="margin-bottom: 30px;">
+                    <div class="stat-number">75%</div>
+                    <div class="stat-label">der 14–24-Jährigen mit Migrationshintergrund berichten Rassismuserfahrungen (NaDiRa 2022)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">⅔</div>
+                    <div class="stat-label">davon erleben Diskriminierung noch im Schulkontext</div>
+                </div>
+                <div class="card" style="margin-top: 30px;">
+                    <p style="font-size: 22px;"><strong>CLAIM 2023:</strong> 20% der antimuslimischen Diskriminierungsfälle passieren in Schulen</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Studienlage zu Benachteiligung</h3>
+                <div class="quote-box">
+                    <p class="quote-text" style="font-size: 24px;">Quantitative Studien zeigen, dass bei vergleichbaren Leistungen und sozialem Hintergrund keine durchgängige Benachteiligung bei Noten oder Übergangsempfehlungen festgestellt wird.</p>
+                    <p class="quote-source">– Dollmann 2025; Diehl & Fick 2016</p>
+                </div>
+                <div class="card" style="margin-top: 30px; border-left-color: #38a169;">
+                    <h4 style="color: #38a169;">Positive Tendenz</h4>
+                    <p style="margin-top: 12px;">Familien mit Migrationshintergrund haben häufig besonders hohe Bildungsaspirationen, was sich positiv auf Bildungsentscheidungen auswirken kann.</p>
+                    <p class="quote-source" style="margin-top: 12px;">– Salikutluk 2016; Gresch et al. 2012</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 13: Geschlecht -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Geschlecht und Bildungerfolg</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">PISA-Ergebnisse</h3>
+                <div class="diagram-bar">
+                    <div class="bar-label">
+                        <span>Lesekompetenz – Mädchen</span>
+                        <span style="color: #38a169; font-weight: 700;">+7 Punkte</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 55%; background: #38a169;">Vorteil</div>
+                    </div>
+                </div>
+                <div class="diagram-bar">
+                    <div class="bar-label">
+                        <span>Mathematik – Jungen</span>
+                        <span style="color: var(--primary); font-weight: 700;">Vorteil</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 52%; background: var(--primary);">Vorteil</div>
+                    </div>
+                </div>
+                <p style="font-size: 20px; color: var(--secondary-light); margin-top: 20px;">OECD Durchschnitt: 13 Kompetenzpunkte Unterschied</p>
+            </div>
+            <div>
+                <div class="highlight-box" style="margin-bottom: 40px;">
+                    <h3>Wichtig</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Diese Unterschiede sind nicht „natürlich", sondern Folge stereotyper Erziehungsmuster.</p>
+                </div>
+                <div class="card">
+                    <h4>Ursachen für Geschlechtsunterschiede</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Geschlechtsstereotype Interessenförderung durch Eltern</li>
+                        <li>Unterschiedliche Erwartungen von Lehrkräften</li>
+                        <li>Gesellschaftliche Rollenbilder</li>
+                        <li>Verschobene Selbstbilder bei Kindern</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 14: Einschränkungen und Mobbing -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Einschränkungen und Mobbing</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <div class="card" style="margin-bottom: 30px;">
+                    <div class="card-icon" style="background: #805ad5;">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <h3 style="margin-top: 20px;">Physische Einschränkungen</h3>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Barrierefreiheit nicht überall gegeben</li>
+                        <li>Nachteilsausweisung oft bürokratisch</li>
+                        <li>Inklusion variiert stark nach Schule</li>
+                        <li>Fehlende Assistenz und Ressourcen</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background: #e53e3e;">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                    </div>
+                    <h3 style="margin-top: 20px;">Psychische Einschränkungen</h3>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Steigende Zahlen bei Kindern und Jugendlichen</li>
+                        <li>Wenig Schulpsychologen verfügbar</li>
+                        <li>Stigma und Unwissenheit</li>
+                        <li>Auswirkungen auf Konzentration und Leistung</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <div class="highlight-box" style="background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); margin-bottom: 40px;">
+                    <h3>Mobbing in der Schule</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Führt zu schlechten Voraussetzungen für ein lernfreundliches Klima und kann langfristige Folgen für die Bildungsbiographie haben.</p>
+                </div>
+                <div class="card">
+                    <h4>Auswirkungen von Mobbing</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Verlust von Lernmotivation</li>
+                        <li>Schulangst und Schulverweigerung</li>
+                        <li>Soziale Isolation</li>
+                        <li>Langfristige psychische Belastungen</li>
+                        <li>Schlechtere Noten und Abschlüsse</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 15: Familiäre Faktoren - Übersicht -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Familiäre Faktoren</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Soziale Ressourcen der Familie</h3>
+                <div class="card family" style="margin-bottom: 20px;">
+                    <h4>Finanzielle Ressourcen</h4>
+                    <p style="margin-top: 8px;">Einkommen, Zugang zu Lernmaterialien, Nachhilfe</p>
+                </div>
+                <div class="card family" style="margin-bottom: 20px;">
+                    <h4>Kulturelles Kapital</h4>
+                    <p style="margin-top: 8px;">Sprachkompetenz, Wissen über Schulsystem, Bücher zu Hause</p>
+                </div>
+                <div class="card family" style="margin-bottom: 20px;">
+                    <h4>Bildungsstand der Eltern</h4>
+                    <p style="margin-top: 8px;">Eigene Erfahrungen, Unterstützungsmöglichkeiten</p>
+                </div>
+                <div class="card family">
+                    <h4>Bildungsaspirationen</h4>
+                    <p style="margin-top: 8px;">Erwartungen, Einstellung zur Bildung, Zukunftspläne</p>
+                </div>
+            </div>
+            <div>
+                <div class="highlight-box" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%); margin-bottom: 40px;">
+                    <h3>Ressourcenstarke Haushalte</h3>
+                    <p style="font-size: 24px; margin-top: 16px;">bieten mehr Sprachförderung, mehr Bücher, mehr Vorlesen, frühere Förderung</p>
+                    <p class="quote-source" style="margin-top: 16px; color: rgba(255,255,255,0.8);">– Hart & Risley (1995), bestätigt durch PISA & IGLU</p>
+                </div>
+                <div class="quote-box">
+                    <p class="quote-text">Kinder aus ressourcenstarken Haushalten haben bereits vor der Einschulung einen deutlichen Vorsprung.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 16: Migrationshintergrund der Eltern -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Migrationshintergrund der Eltern</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <div class="card" style="margin-bottom: 30px;">
+                    <h3>Schulische Segregation</h3>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Eltern mit Migrationshintergrund entscheiden sich häufiger für die zugewiesene Schule</li>
+                        <li>Bildungsnahe Eltern meiden Schulen mit hohem Zuwandereranteil</li>
+                        <li>Schüler mit Migrationshintergrund lernen oft mit leistungsschwächeren Mitschülern</li>
+                    </ul>
+                </div>
+                <div class="highlight-box">
+                    <h3>Wichtig</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Alleine der Migrationshintergrund ist unbedeutsam – der sozioökonomische Hintergrund ist entscheidend!</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Der Zusammenhang</h3>
+                <div class="diagram-bar">
+                    <div class="bar-label">
+                        <span>Kinder mit Migrationshintergrund aus bildungsnahen Familien</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 75%; background: #38a169;">Bessere Ergebnisse</div>
+                    </div>
+                </div>
+                <div class="diagram-bar">
+                    <div class="bar-label">
+                        <span>Kinder ohne Migrationshintergrund aus bildungsfernen Familien</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: 50%; background: #e53e3e;">Schlechtere Ergebnisse</div>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 40px;">
+                    <h4>Kernaussage</h4>
+                    <p style="margin-top: 12px;">Kinder mit Migrationshintergrund kommen meist aus bildungsferneren Schichten – das erklärt die schlechteren Lernergebnisse, nicht die Herkunft selbst.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 17: Bildungsstand und Einkommen -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Bildungsstand und Einkommen der Eltern</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3" style="margin-bottom: 40px;">
+            <div class="stat-card">
+                <div class="stat-number" style="color: var(--primary);">3x</div>
+                <div class="stat-label">höhere Wahrscheinlichkeit für Gymnasium bei Akademiker-Kindern</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: var(--accent);">€€€</div>
+                <div class="stat-label">Nachhilfe kostet durchschnittlich 20-40€ pro Stunde</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #38a169;">100%</div>
+                <div class="stat-label">der Kosten für Schulbücher, Ausflüge, Material tragen Eltern</div>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h4>Was Geld beeinflusst</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Zugang zu Lernmaterialien und Büchern</li>
+                    <li>Nachhilfe und Förderangebote</li>
+                    <li>Digitaler Zugriff (Computer, Internet)</li>
+                    <li>Teilnahme an Klassenfahrten</li>
+                    <li>Sportvereine und kulturelle Aktivitäten</li>
+                    <li>Ruhiger Arbeitsplatz zu Hause</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: var(--accent);">
+                <h4>Versteckte Kosten</h4>
+                <p style="margin-top: 16px;">Schulbesuch scheint kostenlos, aber:</p>
+                <ul class="list-styled" style="margin-top: 12px;">
+                    <li>Fahrtkosten zur Schule</li>
+                    <li>Studienfahrten und Exkursionen</li>
+                    <li>Sportverein und Freizeitangebote</li>
+                    <li>Digitale Endgeräte</li>
+                    <li>Schulmaterial und -kleidung</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 18: Familienstruktur und Erwartungen -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Familienstruktur und Erwartungen</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Familiengestaltung</h3>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>Anzahl der Geschwister</h4>
+                    <p style="margin-top: 12px;">Mehr Geschwister bedeuten oft weniger individuelle Aufmerksamkeit und Ressourcen pro Kind.</p>
+                </div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>Familienform</h4>
+                    <p style="margin-top: 12px;">Ein-Eltern-Haushalte haben oft weniger Zeit und finanzielle Ressourcen für Bildungsunterstützung.</p>
+                </div>
+                <div class="card">
+                    <h4>Betreuungssituation</h4>
+                    <p style="margin-top: 12px;">Ältere Geschwister übernehmen oft Betreuungsaufgaben, was eigene Lernzeit reduziert.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Elterliche Erwartungen</h3>
+                <div class="highlight-box" style="background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%); margin-bottom: 30px;">
+                    <h3>Paradoxon</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Migrantenfamilien haben oft HÖHERE Bildungsaspirationen als deutsche Familien – erreichen aber im Durchschnitt schlechtere Ergebnisse.</p>
+                </div>
+                <div class="card">
+                    <h4>Herausforderungen</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Hohe Erwartungen können Druck erzeugen</li>
+                        <li>Fehlende Kenntnisse über das deutsche Schulsystem</li>
+                        <li>Sprachliche Barrieren bei Elternabenden</li>
+                        <li>Unterschiedliche kulturelle Erwartungen</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 19: Strukturelle Faktoren - Übersicht -->
+<section class="slide section-intro">
+    <span class="section-number">03</span>
+    <div class="slide-content">
+        <h2 style="font-size: 72px;">Strukturelle Faktoren</h2>
+        <p style="font-size: 32px; margin-top: 30px; max-width: 900px;">Das deutsche Schulsystem und seine Auswirkungen auf Bildungsgerechtigkeit.</p>
+        <div class="grid-3" style="margin-top: 60px; gap: 30px;">
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Frühe Selektion</div>
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Ausstattung</div>
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Klassengröße</div>
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Lehrkräfte</div>
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Notensystem</div>
+            <div class="pill"><span class="pill-dot" style="background: #dd6b20;"></span>Förderangebote</div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 20: Frühe Selektion -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Frühe Aufteilung im Schulsystem</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="timeline" style="margin-bottom: 60px;">
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <h4>Grundschule</h4>
+                <p style="font-size: 20px;">Klasse 1-4 (bzw. 1-6)</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background: var(--primary);"></div>
+                <h4>Übergang</h4>
+                <p style="font-size: 20px;">Mit 10-12 Jahren</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background: #38a169;"></div>
+                <h4>Gymnasium</h4>
+                <p style="font-size: 20px;">Bis Abitur</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background: #805ad5;"></div>
+                <h4>Realschule</h4>
+                <p style="font-size: 20px;">Mittlerer Abschluss</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background: #e53e3e;"></div>
+                <h4>Mittelschule</h4>
+                <p style="font-size: 20px;">Hauptschulabschluss</p>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card structural">
+                <h4>Problem der frühen Selektion</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Entscheidung mit 10-12 Jahren prägt gesamte Bildungsbiographie</li>
+                    <li>Starke Abhängigkeit vom Elternhaus bei der Entscheidung</li>
+                    <li>Schulformempfehlung oft sozial selektiv</li>
+                    <li>Wechsel zwischen Schulformen erschwert</li>
+                </ul>
+            </div>
+            <div class="card structural" style="border-left-color: #38a169;">
+                <h4>Alternative: Gesamtschule</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Hält Bildungswege länger offen</li>
+                    <li>Führt mehr Schüler zu höheren Abschlüssen</li>
+                    <li>Reduziert Zusammenhang zwischen Sozialschicht und Abschluss</li>
+                    <li>Senkt Anteil derer ohne Abschluss</li>
+                </ul>
+                <p class="quote-source" style="margin-top: 16px;">– Lenz 2023, FU Berlin</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 21: Ausstattung und Klassengröße -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Ausstattung und Klassengröße</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Digitale Ausstattung</h3>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>DigitalPakt Schule</h4>
+                    <p style="margin-top: 12px;">Bundesweite Initiative zur Verbesserung der digitalen Infrastruktur – aber Umsetzung variiert stark.</p>
+                </div>
+                <div class="card">
+                    <h4>Ungleichheiten</h4>
+                    <ul class="list-styled" style="margin-top: 12px;">
+                        <li>Endgeräte nicht flächendeckend vorhanden</li>
+                        <li>WLAN an Schulen nicht selbstverständlich</li>
+                        <li>Lehrkräftefortbildung数字化不均</li>
+                        <li>Privatschulen oft besser ausgestattet</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Klassengröße</h3>
+                <div class="stat-card" style="margin-bottom: 30px;">
+                    <div class="stat-number">25+</div>
+                    <div class="stat-label">Durchschnittliche Schüler pro Klasse in Deutschland (OECD-Durchschnitt: 21)</div>
+                </div>
+                <div class="highlight-box">
+                    <h3>Auswirkungen großer Klassen</h3>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li style="color: rgba(255,255,255,0.9);">Weniger Fokus auf den einzelnen Schüler</li>
+                        <li style="color: rgba(255,255,255,0.9);">Gestresste Lehrer mit weniger Energie</li>
+                        <li style="color: rgba(255,255,255,0.9);">Schwächere Schüler fallen durchs Raster</li>
+                        <li style="color: rgba(255,255,255,0.9);">Individuelle Förderung kaum möglich</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 22: Lehrkräfte und Notensystem -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Lehrkräfte und Notensystem</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Lehrkräftesituation</h3>
+                <div class="card structural" style="margin-bottom: 20px;">
+                    <h4>Lehrermangel</h4>
+                    <p style="margin-top: 12px;">Bundesweit fehlen tausende Lehrkräfte – besonders in Grundschulen und bei Inklusion.</p>
+                </div>
+                <div class="card structural">
+                    <h4>Konsequenzen</h4>
+                    <ul class="list-styled" style="margin-top: 12px;">
+                        <li>Ausfall von Unterrichtsstunden</li>
+                        <li>Fachfremder Unterricht</li>
+                        <li>Hohe Belastung der verbleibenden Lehrkräfte</li>
+                        <li>Weniger Zeit für individuelle Unterstützung</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Notensystem</h3>
+                <div class="quote-box" style="margin-bottom: 30px;">
+                    <p class="quote-text">Noten als „gerechter" Indikator für Talent, Begabung und Intelligenz?</p>
+                </div>
+                <div class="card" style="border-left-color: var(--accent);">
+                    <h4>Probleme des Notensystems</h4>
+                    <ul class="list-styled" style="margin-top: 12px;">
+                        <li>Subjektive Bewertung durch Lehrkräfte</li>
+                        <li>Stereotype beeinflussen Notengebung</li>
+                        <li>Shifting Standards bei verschiedenen Gruppen</li>
+                        <li>Noten sagen wenig über tatsächliche Kompetenz</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 23: Förderangebote -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Förderangebote</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3">
+            <div class="card structural">
+                <h4>OGS / Ganztag</h4>
+                <p style="margin-top: 12px;">Offene Ganztagsschulen bieten Förderung und Betreuung – aber Qualität variiert stark.</p>
+            </div>
+            <div class="card structural">
+                <h4>Nachhilfe</h4>
+                <p style="margin-top: 12px;">Oft notwendig, aber kostenpflichtig – verstärkt soziale Ungleichheit.</p>
+            </div>
+            <div class="card structural">
+                <h4>DaZ-Förderung</h4>
+                <p style="margin-top: 12px;">Deutsch als Zweitsprache – wichtige Unterstützung für Migrantenkinder.</p>
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top: 50px;">
+            <div class="highlight-box">
+                <h3>Ethical Question</h3>
+                <p style="font-size: 26px; margin-top: 16px;">Ist die Förderung von Hochbegabten unfair? Werden wirklich allen die gleichen Möglichkeiten bereitgestellt?</p>
+            </div>
+            <div class="card">
+                <h4>Bestehende Maßnahmen</h4>
+                <ul class="list-styled" style="margin-top: 12px;">
+                    <li>Schulsozialarbeit und Schulpsychologen</li>
+                    <li>Nachteilsausgleich bei Behinderung</li>
+                    <li>Bildungs- und Teilhabepaket</li>
+                    <li>BaföG für Schüler</li>
+                    <li>Gute-Kita-Gesetz</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 24: PISA-Ergebnisse -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>PISA-Ergebnisse – Empirische Evidenz</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Soziale Herkunft und Leistung</h3>
+                <div class="highlight-box" style="margin-bottom: 30px;">
+                    <h3 style="color: var(--warning); font-size: 32px;">Kernerkenntnis</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Deutschland zeigt überdurchschnittlich starke Kopplung zwischen sozialer Herkunft und Schulleistung.</p>
+                </div>
+                <div class="card">
+                    <h4>Was PISA misst</h4>
+                    <p style="margin-top: 12px;">Lesekompetenz, Mathematik, Naturwissenschaften bei 15-Jährigen – alle 3 Jahre international vergleichend.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Trend-Entwicklung</h3>
+                <div class="indicator-row">
+                    <div class="indicator-label">Lesekompetenz</div>
+                    <div class="indicator-bars">
+                        <div class="mini-bar" style="width: 70%; background: var(--primary);">2000: 484</div>
+                        <div class="mini-bar" style="width: 58%; background: #e53e3e;">2022: 480</div>
+                    </div>
+                </div>
+                <div class="indicator-row">
+                    <div class="indicator-label">Mathematik</div>
+                    <div class="indicator-bars">
+                        <div class="mini-bar" style="width: 72%; background: var(--primary);">2003: 503</div>
+                        <div class="mini-bar" style="width: 55%; background: #e53e3e;">2022: 475</div>
+                    </div>
+                </div>
+                <div class="indicator-row" style="border-bottom: none;">
+                    <div class="indicator-label">Naturwissenschaften</div>
+                    <div class="indicator-bars">
+                        <div class="mini-bar" style="width: 75%; background: var(--primary);">2006: 516</div>
+                        <div class="mini-bar" style="width: 60%; background: #e53e3e;">2022: 492</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 25: Folgen -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Folgen und Implikationen</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3">
+            <div class="card" style="border-left-color: var(--primary);">
+                <h4>Individuelle Ebene</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Eingeschränkte Berufswahl</li>
+                    <li>Geringeres Einkommen</li>
+                    <li>Weniger Aufstiegschancen</li>
+                    <li>Geringere Lebenszufriedenheit</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: #38a169;">
+                <h4>Gesellschaftliche Ebene</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Verringerte soziale Mobilität</li>
+                    <li>Zunehmende Ungleichheit</li>
+                    <li>Gefährdete Demokratiefähigkeit</li>
+                    <li>Verlorene Potenziale</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: #805ad5;">
+                <h4>Ökonomische Ebene</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Fachkräftemangel</li>
+                    <li>Höhere Sozialausgaben</li>
+                    <li>Weniger Innovation</li>
+                    <li>Belastung der Sozialsysteme</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 60px;">
+            <h3 style="font-size: 36px;">Bildungsungerechtigkeit kostet die Gesellschaft</h3>
+            <p style="font-size: 28px; margin-top: 20px;">Nicht nur individuelles Versagen, sondern auch volkswirtschaftlicher Schaden durch ungenutzte Potenziale.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 26: Internationale Vergleiche - Finnland -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Internationaler Vergleich – Finnland</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="country-card">
+                <div class="country-header">
+                    <div class="country-flag">🇫🇮</div>
+                    <h3>Finnland</h3>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 22px;">Vorzeigeland für Chancengleichheit</p>
+                </div>
+                <div class="country-body">
+                    <h4>Warum es funktioniert</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Gesellschaft mit geringer Ungleichheit</li>
+                        <li>Schule gleicht Herkunftsnachteile aus</li>
+                        <li>Späte Selektion (mit 16 Jahren)</li>
+                        <li>Kaum Noten in frühen Jahren</li>
+                        <li>Starke individuelle Förderung</li>
+                        <li>Hoher Lehrerstatus und -ausbildung</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <div class="highlight-box" style="margin-bottom: 40px;">
+                    <h3>Kernerfolg</h3>
+                    <p style="font-size: 28px; margin-top: 16px;">Kompetenzen der Kinder aus sozial schwächeren Familien sind sehr viel näher bei denen ihrer besser gestellten Mitschüler.</p>
+                </div>
+                <div class="comparison-box" style="flex-direction: column;">
+                    <div class="comparison-side comparison-left" style="padding: 30px;">
+                        <h4 style="color: var(--primary);">Deutschland</h4>
+                        <p style="font-size: 20px;">Selektion mit 10-12 Jahren, drei Schulformen, starker Herkunftseinfluss</p>
+                    </div>
+                    <div class="comparison-side comparison-right" style="padding: 30px;">
+                        <h4>Finnland</h4>
+                        <p style="font-size: 20px;">Gemeinsame Schule bis 16, individuelle Förderung, geringer Herkunftseinfluss</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 27: Internationaler Vergleich - Kanada -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Internationaler Vergleich – Kanada</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="country-card">
+                <div class="country-header" style="background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);">
+                    <div class="country-flag">🇨🇦</div>
+                    <h3>Kanada</h3>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 22px;">Erfolgreiches Einwanderungsland</p>
+                </div>
+                <div class="country-body">
+                    <h4>Erfolgsfaktoren</h4>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li>Inklusive Sprachförderung</li>
+                        <li>Weniger Trennung nach Leistung</li>
+                        <li>Fokus auf Chancengleichheit</li>
+                        <li>Integration von Migrantenkindern</li>
+                        <li>Flexibles Schulsystem</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <div class="quote-box" style="margin-bottom: 40px;">
+                    <p class="quote-text">PISA-Studien zeigen: Kanada erreicht hohe Bildungsqualität bei gleichzeitig geringer sozialer Ungleichheit.</p>
+                </div>
+                <div class="card">
+                    <h4>Was wir lernen können</h4>
+                    <p style="margin-top: 16px;">Bildungsungleichheiten lassen sich durch politische Maßnahmen zumindest reduzieren – wenn der politische Wille besteht.</p>
+                </div>
+                <div class="highlight-box" style="margin-top: 30px; background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);">
+                    <h3>Message</h3>
+                    <p style="font-size: 26px; margin-top: 16px;">Maßnahmen in Politik und Wissenschaft sind möglich – es braucht nur die Umsetzung.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 28: Lösungsansätze - Übersicht -->
+<section class="slide section-intro">
+    <span class="section-number">04</span>
+    <div class="slide-content">
+        <h2 style="font-size: 72px;">Lösungsansätze</h2>
+        <p style="font-size: 32px; margin-top: 30px; max-width: 900px;">Wie kann Bildungsgerechtigkeit verbessert werden?</p>
+        <div class="grid-3" style="margin-top: 60px;">
+            <div class="visual-circle large" style="background: #38a169;">
+                <h4>Frühkindliche Förderung</h4>
+                <p>Kitas, Sprachförderung</p>
+            </div>
+            <div class="visual-circle large" style="background: #805ad5;">
+                <h4>Schulreform</h4>
+                <p>Struktur, Lehrkräfte</p>
+            </div>
+            <div class="visual-circle large" style="background: #dd6b20;">
+                <h4>Individuelle Förderung</h4>
+                <p>Nachhilfe, Mentoring</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 29: Lösungsansätze - Frühkindlich -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Lösungsansätze – Frühkindliche Förderung</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">Kita & Vorschule</h3>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>Sprachförderung stärken</h4>
+                    <ul class="list-styled" style="margin-top: 12px;">
+                        <li>Mehr Sprachförderung im Kindergarten</li>
+                        <li>Bessere Zusammenarbeit Kita ↔ Schule</li>
+                        <li>Verpflichtende Vorschulprogramme</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>Früherkennung</h4>
+                    <ul class="list-styled" style="margin-top: 12px;">
+                        <li>Lernschwierigkeiten früh erkennen</li>
+                        <li>Vorläuferkompetenzen fördern</li>
+                        <li>Motorische und musische Entwicklung</li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Verbindliche Standards</h3>
+                <div class="highlight-box">
+                    <h3>Empfehlung</h3>
+                    <ul class="list-styled" style="margin-top: 16px;">
+                        <li style="color: rgba(255,255,255,0.9);">Verbindliche Bildungspläne in Kitas</li>
+                        <li style="color: rgba(255,255,255,0.9);">Förderung außerhalb der Familie</li>
+                        <li style="color: rgba(255,255,255,0.9);">Defizite früh ausgleichen</li>
+                        <li style="color: rgba(255,255,255,0.9);">Vorbereitung auf die Schule</li>
+                    </ul>
+                </div>
+                <div class="quote-box" style="margin-top: 30px;">
+                    <p class="quote-text">Frühkindliche Bildung ist die wichtigste Investition in Bildungsgerechtigkeit.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 30: Lösungsansätze - Schulreform -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Lösungsansätze – Schulstrukturreform</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3">
+            <div class="solution-card">
+                <div class="solution-number">1</div>
+                <h4>Spätere Aufteilung</h4>
+                <p style="margin-top: 12px;">Längere gemeinsame Schulzeit, Entscheidungen erst mit 14-16 Jahren.</p>
+            </div>
+            <div class="solution-card">
+                <div class="solution-number">2</div>
+                <h4>Mehr Gesamtschulen</h4>
+                <p style="margin-top: 12px;">Bildungswege länger offenhalten, leichtere Schulwechsel ermöglichen.</p>
+            </div>
+            <div class="solution-card">
+                <div class="solution-number">3</div>
+                <h4>Einheitliche Standards</h4>
+                <p style="margin-top: 12px;">Bundesweite Qualitätssicherung, weniger Länder-Unterschiede.</p>
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top: 50px;">
+            <div class="card">
+                <h4>Lehrkräfte stärken</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Bessere Arbeitsbedingungen</li>
+                    <li>Fortbildungen zu Diversität und Inklusion</li>
+                    <li>Mehr Schulpsychologen und Sozialpädagogen</li>
+                    <li>Attraktivere Ausbildung und Bezahlung</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: var(--accent);">
+                <h4>Ganztag verbessern</h4>
+                <p style="margin-top: 16px;">Ganztagsschulen bleiben hinter den Erwartungen beim Abbau von Ungleichheiten zurück.</p>
+                <p style="margin-top: 12px;"><strong>Lösung:</strong> Verstärkter Ausbau mit gezielter Konzeption, Angebote mit Vormittag verbinden.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 31: Lösungsansätze - Individuelle Förderung -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Lösungsansätze – Individuelle Förderung</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3 style="margin-bottom: 30px;">In der Schule</h3>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>Kleinere Klassen</h4>
+                    <p style="margin-top: 12px;">Mehr Raum für individuelle Unterstützung und Beziehungsaufbau.</p>
+                </div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <h4>Doppelbesetzung</h4>
+                    <p style="margin-top: 12px;">Zwei Lehrkräfte ermöglichen Differenzierung im Unterricht.</p>
+                </div>
+                <div class="card">
+                    <h4>Kostenlose Nachhilfe</h4>
+                    <p style="margin-top: 12px;">Für alle Schüler, nicht nur für zahlungskräftige Familien.</p>
+                </div>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 30px;">Außerschulisch</h3>
+                <div class="card" style="margin-bottom: 20px; border-left-color: #38a169;">
+                    <h4 style="color: #38a169;">Mentoring-Programme</h4>
+                    <p style="margin-top: 12px;">z.B. Rock Your Life – Studierende begleiten Schüler.</p>
+                </div>
+                <div class="card" style="margin-bottom: 20px; border-left-color: #805ad5;">
+                    <h4 style="color: #805ad5;">Lerncoaches</h4>
+                    <p style="margin-top: 12px;">Individuelle Begleitung und Förderplanung.</p>
+                </div>
+                <div class="card" style="border-left-color: #dd6b20;">
+                    <h4 style="color: #dd6b20;">Sommercamps</h4>
+                    <p style="margin-top: 12px;">Ferienangebote mit Lernelementen für benachteiligte Kinder.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 32: Lösungsansätze - Systemisch -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Weitere Reformbereiche</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="card" style="margin-bottom: 30px;">
+                <h4>Notensystem überdenken</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Weniger Gewicht auf Noten</li>
+                    <li>Mehr Feedback statt Ziffern</li>
+                    <li>Kompetenzorientierte Bewertung</li>
+                    <li>Portfolioarbeit stärken</li>
+                </ul>
+            </div>
+            <div class="card" style="margin-bottom: 30px; border-left-color: var(--primary);">
+                <h4>Digitale Chancengleichheit</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Einheitliche Ausstattung für alle</li>
+                    <li>Kostenlose Lernsoftware</li>
+                    <li>Lehrkräftefortbildung</li>
+                    <li>Digitale Basiskonzepte</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: #38a169;">
+                <h4>Eltern einbinden</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Mehrsprachige Kommunikation</li>
+                    <li>Elternberatung anbieten</li>
+                    <li>Unterstützung für bildungsferne Haushalte</li>
+                </ul>
+            </div>
+            <div class="card" style="border-left-color: #e53e3e;">
+                <h4>Sicherer Raum</h4>
+                <ul class="list-styled" style="margin-top: 16px;">
+                    <li>Verbindliche Anti-Mobbing-Programme</li>
+                    <li>Stärkere Schulgemeinschaft</li>
+                    <li>Vertrauenspersonen</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 33: Umsetzung -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Umsetzung und Prioritäten</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="highlight-box" style="margin-bottom: 50px;">
+            <h3 style="font-size: 36px;">Zentrale Erkenntnis</h3>
+            <p style="font-size: 28px; margin-top: 20px;">Punktuelle Veränderungen tragen wenig zum Abbau der Ungerechtigkeiten bei. Maßnahmen müssen in allen Bildungsbereichen ansetzen und ineinandergreifen.</p>
+        </div>
+        <div class="grid-3">
+            <div class="card">
+                <h4 style="color: var(--primary);">Bund</h4>
+                <p style="margin-top: 12px;">Rahmenbedingungen, Finanzierung, bundesweite Standards</p>
+            </div>
+            <div class="card">
+                <h4 style="color: #38a169;">Länder</h4>
+                <p style="margin-top: 12px;">Schulgesetze, Lehrpläne, Lehrkräfteausbildung</p>
+            </div>
+            <div class="card">
+                <h4 style="color: #805ad5;">Kommunen</h4>
+                <p style="margin-top: 12px;">Schulgebäude, Ausstattung, lokale Förderung</p>
+            </div>
+        </div>
+        <div class="card" style="margin-top: 50px; border-left-color: var(--accent);">
+            <h4>Erforderlich: Integrierte Strategie</h4>
+            <div class="grid-2" style="margin-top: 20px;">
+                <ul class="list-styled">
+                    <li>Monitoring und Evaluation</li>
+                    <li>Messgrößen definieren</li>
+                    <li>Regelmäßige Überprüfung</li>
+                </ul>
+                <ul class="list-styled">
+                    <li>Langfristige Finanzierung</li>
+                    <li>Politische Kontinuität</li>
+                    <li>Gesellschaftlicher Konsens</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 34: Take-aways -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Kernaussagen – Take-Aways</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="takeaway-card" style="margin-bottom: 30px;">
+            <div class="takeaway-number">1</div>
+            <div class="takeaway-content">
+                <h4>Gerechtigkeit ≠ Gleichheit</h4>
+                <p>Faire Bildung bedeutet individuelle Unterstützung je nach Bedarf – nicht gleiche Behandlung für alle.</p>
+            </div>
+        </div>
+        <div class="takeaway-card" style="margin-bottom: 30px;">
+            <div class="takeaway-number">2</div>
+            <div class="takeaway-content">
+                <h4>Ursachen sind vielschichtig</h4>
+                <p>Soziale, familiäre und strukturelle Faktoren greifen ineinander – einfache Lösungen gibt es nicht.</p>
+            </div>
+        </div>
+        <div class="takeaway-card" style="margin-bottom: 30px;">
+            <div class="takeaway-number">3</div>
+            <div class="takeaway-content">
+                <h4>Frühe Selektion verschärft Ungleichheit</h4>
+                <p>Das deutsche Schulssystem mit früher Aufteilung begünstigt Kinder aus bildungsnahen Familien.</p>
+            </div>
+        </div>
+        <div class="takeaway-card" style="margin-bottom: 30px;">
+            <div class="takeaway-number">4</div>
+            <div class="takeaway-content">
+                <h4>Veränderung ist möglich</h4>
+                <p>Internationale Beispiele zeigen: Bildungsgerechtigkeit lässt sich durch politische Maßnahmen verbessern.</p>
+            </div>
+        </div>
+        <div class="takeaway-card">
+            <div class="takeaway-number">5</div>
+            <div class="takeaway-content">
+                <h4>Es braucht integrierte Strategien</h4>
+                <p>Punktuelle Maßnahmen reichen nicht – alle Bereiche müssen zusammen denken und handeln.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 35: Diskussionsfragen -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Diskussionsfragen</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="discussion-card" style="margin-bottom: 30px;">
+                <div class="question-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                </div>
+                <div>
+                    <h4>Frage 1</h4>
+                    <p style="margin-top: 8px; font-size: 24px;">Wie kann die frühe Selektion im deutschen Schulsystem überwunden werden, ohne dabei Leistungsunterschiede zu ignorieren?</p>
+                </div>
+            </div>
+            <div class="discussion-card" style="margin-bottom: 30px;">
+                <div class="question-icon" style="background: #38a169;">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                </div>
+                <div>
+                    <h4>Frage 2</h4>
+                    <p style="margin-top: 8px; font-size: 24px;">Welche Rolle sollten Eltern bei der Verbesserung von Bildungsgerechtigkeit spielen?</p>
+                </div>
+            </div>
+            <div class="discussion-card" style="margin-bottom: 30px;">
+                <div class="question-icon" style="background: #805ad5;">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                </div>
+                <div>
+                    <h4>Frage 3</h4>
+                    <p style="margin-top: 8px; font-size: 24px;">Ist individuelle Förderung von Hochbegabten gerecht oder verstärkt sie Ungleichheit?</p>
+                </div>
+            </div>
+            <div class="discussion-card">
+                <div class="question-icon" style="background: #dd6b20;">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                </div>
+                <div>
+                    <h4>Frage 4</h4>
+                    <p style="margin-top: 8px; font-size: 24px;">Was können wir als Gesellschaft, als Schule, als Einzelne tun?</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 36: Quellen -->
+<section class="slide">
+    <div class="slide-header">
+        <h2>Quellen und weiterführende Literatur</h2>
+        <div class="accent-line" style="margin-top: 20px;"></div>
+    </div>
+    <div class="slide-content">
+        <div class="source-list">
+            <p><strong>Bundeszentrale für politische Bildung (bpb):</strong> Dossier Bildung, Bildungsgerechtigkeit, Chancengleichheit</p>
+            <p><strong>OECD PISA-Studien:</strong> Mehrere Zyklen, internationale Vergleichsdaten</p>
+            <p><strong>Dollmann 2025:</strong> Ethnische Diskriminierung im Bildungssystem</p>
+            <p><strong>Diehl & Fick 2016:</strong> Studien zur Benachteiligung bei Noten</p>
+            <p><strong>NaDiRa / DeZIM 2022:</strong> Nationaler Diskriminierungs- und Rassismusmonitor</p>
+            <p><strong>Salikutluk 2016:</strong> Bildungsaspirationen von Migrantenfamilien</p>
+            <p><strong>Gresch et al. 2012:</strong> Bildungsentscheidungen im Grundschulalter</p>
+            <p><strong>Hart & Risley (1995):</strong> Frühe Sprachumwelt und Entwicklung</p>
+            <p><strong>Lenz 2023, FU Berlin:</strong> Dissertation zu Gesamtschulen</p>
+            <p><strong>SVR-Migration 2024:</strong> Kurzstudie zu Bildung und Migration</p>
+            <p><strong>Prof. Dr. Josef Schmid:</strong> Definition Bildungsgerechtigkeit (Gabler Wirtschaftslexikon)</p>
+            <p><strong>UN-Menschenrechtserklärung:</strong> Artikel 26 – Recht auf Bildung</p>
+            <p><strong>UN-Kinderrechtskonvention:</strong> Artikel 2 – Schutz vor Diskriminierung</p>
+            <p><strong>Grundgesetz Artikel 3:</strong> Gleichheit vor dem Gesetz</p>
+            <p><strong>PH Bern:</strong> Bildungsgerechtigkeit vs. Chancengleichheit</p>
+            <p><strong>GEW Baden-Württemberg:</strong> Maßnahmen gegen Bildungsungerechtigkeit</p>
+        </div>
+    </div>
+</section>
+
+<!-- Slide 37: Abschluss -->
+<section class="slide hero-slide">
+    <h1 style="font-size: 80px;">Vielen Dank für Ihre Aufmerksamkeit!</h1>
+    <div class="accent-bar"></div>
+    <p class="subtitle" style="font-size: 32px;">Bildungsgerechtigkeit in Deutschland</p>
+    <p class="subtitle" style="margin-top: 40px; font-size: 28px; opacity: 0.9;">Wissenschaftswoche 2026</p>
+    <p class="subtitle" style="margin-top: 20px; font-size: 24px; opacity: 0.7;">David, Nico, Helena, Lilli, Nick</p>
+</section>
+
+</body>
+</html>
+```
