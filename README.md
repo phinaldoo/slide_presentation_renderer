@@ -46,9 +46,17 @@ Notes:
 ### Response
 
 - `200 OK`
-- Body is binary `application/vnd.openxmlformats-officedocument.presentationml.presentation`
-- `Content-Disposition` includes suggested `.pptx` filename
+- Body is binary `application/zip`
+- `Content-Disposition` includes suggested `.zip` filename
 - `X-Rendering-Version` returns the used renderer
+- `X-Slide-Count` returns number of generated slide PNG files
+
+ZIP structure:
+
+- `presentation_<version>_<timestamp>.pptx`
+- `slides/slide_001.png`
+- `slides/slide_002.png`
+- ...
 
 ## Run with Docker Compose
 
@@ -74,7 +82,7 @@ curl -X POST "http://localhost:8080/api/render" \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   --data-binary @request.json \
-  --output presentation.pptx
+  --output presentation_bundle.zip
 ```
 
 ## Security hardening included

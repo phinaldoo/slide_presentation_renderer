@@ -12,7 +12,6 @@ from .auth import require_api_key, validate_auth_configuration
 from .config import SETTINGS
 from .models import RenderRequest
 from .render_service import (
-    PPTX_MIME_TYPE,
     RenderExecutionError,
     RenderValidationError,
     render_presentation,
@@ -91,5 +90,6 @@ async def render_endpoint(payload: RenderRequest, _: None = Depends(require_api_
     headers = {
         "Content-Disposition": f'attachment; filename="{result.file_name}"',
         "X-Rendering-Version": result.rendering_version.value,
+        "X-Slide-Count": str(result.slide_count),
     }
-    return Response(content=result.content, media_type=PPTX_MIME_TYPE, headers=headers)
+    return Response(content=result.content, media_type=result.media_type, headers=headers)

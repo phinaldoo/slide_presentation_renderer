@@ -7,7 +7,7 @@ The Slide Presentation Renderer API converts HTML slide markup into a `.pptx` fi
 - **Base URL (default):** `http://localhost:8080`
 - **Primary endpoint:** `POST /api/render`
 - **Alias endpoint:** `POST /api/v1/render`
-- **Response type:** binary PowerPoint file
+- **Response type:** ZIP bundle (`.zip`) containing the rendered PowerPoint and slide PNG previews
 
 The service runs behind nginx and enforces API key authentication at **both** layers:
 
@@ -133,10 +133,15 @@ Your HTML can reference those files directly, e.g.:
 ### Success response
 
 - `200 OK`
-- `Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation`
-- `Content-Disposition: attachment; filename="presentation_<version>_<timestamp>.pptx"`
+- `Content-Type: application/zip`
+- `Content-Disposition: attachment; filename="presentation_<version>_<timestamp>.zip"`
 - `X-Rendering-Version: v1|v2`
-- Body: binary `.pptx`
+- `X-Slide-Count: <number of generated slide PNG files>`
+- Body: binary `.zip` with structure:
+  - `presentation_<version>_<timestamp>.pptx`
+  - `slides/slide_001.png`
+  - `slides/slide_002.png`
+  - ...
 
 ---
 
@@ -193,7 +198,7 @@ curl -X POST "http://localhost:8080/api/render" \
   --data '{
     "html": "<section class=\"slide\">Hello</section>"
   }' \
-  --output presentation.pptx
+  --output presentation.zip
 ```
 
 ## 6.2 Render using `Authorization: Bearer`
@@ -206,7 +211,7 @@ curl -X POST "http://localhost:8080/api/render" \
     "html": "<section class=\"slide\">Hello</section>",
     "rendering_version": "v2"
   }' \
-  --output presentation-v2.pptx
+  --output presentation-v2.zip
 ```
 
 ## 6.3 Render with external base64 request file
@@ -233,7 +238,7 @@ curl -X POST "http://localhost:8080/api/render" \
   -H "X-API-Key: ${API_KEY}" \
   -H "Content-Type: application/json" \
   --data-binary @request.json \
-  --output presentation-with-logo.pptx
+  --output presentation-with-logo.zip
 ```
 
 ---

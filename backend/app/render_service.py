@@ -8,13 +8,17 @@ import tempfile
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
+import zipfile
 
 from .config import SETTINGS
 from .local_server import LocalStaticServer
 from .models import RenderRequest, RenderingVersion
 
-PPTX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+ZIP_MIME_TYPE = "application/zip"
+
+_SLIDE_SELECTOR = ".slide"
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _V2_SCRIPT_PATH = _PROJECT_ROOT / "v2" / "index.js"
@@ -41,6 +45,8 @@ class RenderResult:
     file_name: str
     rendering_version: RenderingVersion
     content: bytes
+    media_type: str
+    slide_count: int
 
 
 async def render_presentation(request: RenderRequest) -> RenderResult:
@@ -68,23 +74,66 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
         with LocalStaticServer(presentation_root) as server:
             input_url = f"{server.base_url}/index.html"
             allowed_origin = server.base_url
+
             if request.rendering_version == RenderingVersion.v1:
-                output_path = await _render_v1(input_url, output_dir, allowed_origin)
+                render_pptx_coroutine = _render_v1(input_url, output_dir, allowed_origin)
             else:
-                output_path = await _render_v2(input_url, output_dir, allowed_origin)
+                render_pptx_coroutine = _render_v2(input_url, output_dir, allowed_origin)
+
+            pptx_task = asyncio.create_task(render_pptx_coroutine)
+            slide_images_task = asyncio.create_task(
+                _render_slide_images(input_url, output_dir, allowed_origin)
+            )
+
+            try:
+                output_path, slide_image_paths = await asyncio.gather(
+                    pptx_task,
+                    slide_images_task,
+                )
+            except Exception:
+                for task in (pptx_task, slide_images_task):
+                    if not task.done():
+                        task.cancel()
+                await asyncio.gather(pptx_task, slide_images_task, return_exceptions=True)
+                raise
 
         if not output_path.exists():
             raise RenderExecutionError("renderer finished but no pptx output was produced")
+        if not slide_image_paths:
+            raise RenderExecutionError("renderer finished but no slide images were produced")
 
         pptx_content = output_path.read_bytes()
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        base_name = f"presentation_{request.rendering_version.value}_{timestamp}"
+        pptx_file_name = f"{base_name}.pptx"
+        archive_file_name = f"{base_name}.zip"
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    file_name = f"presentation_{request.rendering_version.value}_{timestamp}.pptx"
+        slide_images: list[tuple[str, bytes]] = []
+        for slide_image_path in sorted(slide_image_paths):
+            archive_path = f"slides/{slide_image_path.name}"
+            slide_images.append((archive_path, slide_image_path.read_bytes()))
+        archive_content = _build_render_archive(pptx_file_name, pptx_content, slide_images)
+
     return RenderResult(
-        file_name=file_name,
+        file_name=archive_file_name,
         rendering_version=request.rendering_version,
-        content=pptx_content,
+        content=archive_content,
+        media_type=ZIP_MIME_TYPE,
+        slide_count=len(slide_image_paths),
     )
+
+
+def _build_render_archive(
+    pptx_file_name: str,
+    pptx_content: bytes,
+    slide_images: list[tuple[str, bytes]],
+) -> bytes:
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(pptx_file_name, pptx_content)
+        for slide_image_name, slide_image_content in slide_images:
+            archive.writestr(slide_image_name, slide_image_content)
+    return buffer.getvalue()
 
 
 def _save_assets(request: RenderRequest, assets_dir: Path) -> None:
@@ -120,6 +169,62 @@ def _decode_base64(content: str) -> bytes:
     if payload.startswith("data:") and "," in payload:
         payload = payload.split(",", 1)[1]
     return base64.b64decode(payload, validate=True)
+
+
+def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> bool:
+    if request_url.startswith(("data:", "blob:", "about:")):
+        return True
+    if not allowed_origin:
+        return True
+    return request_url.startswith(allowed_origin)
+
+
+async def _apply_request_guard(context, allowed_origin: str | None) -> None:
+    if not allowed_origin:
+        return
+
+    async def _route_handler(route) -> None:
+        request_url = route.request.url
+        if _is_allowed_request_url(request_url, allowed_origin):
+            await route.continue_()
+            return
+        await route.abort()
+
+    await context.route("**/*", _route_handler)
+
+
+async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin: str) -> list[Path]:
+    from playwright.async_api import async_playwright
+
+    slide_images_dir = output_dir / "slides"
+    slide_images_dir.mkdir(parents=True, exist_ok=True)
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        try:
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+            await _apply_request_guard(context, allowed_origin)
+            page = await context.new_page()
+            await page.goto(input_url, wait_until="networkidle")
+            await page.wait_for_load_state("networkidle")
+
+            sections = await page.locator(_SLIDE_SELECTOR).all()
+            if not sections:
+                raise RenderExecutionError(
+                    f"no slide elements found for selector '{_SLIDE_SELECTOR}'"
+                )
+
+            rendered_paths: list[Path] = []
+            for slide_index, section in enumerate(sections, start=1):
+                await section.scroll_into_view_if_needed()
+                image_bytes = await section.screenshot(type="png")
+                image_path = slide_images_dir / f"slide_{slide_index:03d}.png"
+                image_path.write_bytes(image_bytes)
+                rendered_paths.append(image_path)
+
+            return rendered_paths
+        finally:
+            await browser.close()
 
 
 async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> Path:

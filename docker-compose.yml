@@ -8,13 +8,15 @@ services:
       ENABLE_DOCS: ${ENABLE_DOCS:-false}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
       API_KEY_AUTH_ENABLED: ${API_KEY_AUTH_ENABLED:-true}
-      API_KEYS: '${API_KEYS:?Set API_KEYS in .env (16+ chars random)}'
+      API_KEYS: '${API_KEYS:-}'
       RENDER_TIMEOUT_SECONDS: ${RENDER_TIMEOUT_SECONDS:-180}
       MAX_CONCURRENT_RENDERS: ${MAX_CONCURRENT_RENDERS:-2}
       MAX_HTML_CHARS: ${MAX_HTML_CHARS:-2000000}
       MAX_INPUT_FILES: ${MAX_INPUT_FILES:-32}
       MAX_ASSET_BYTES: ${MAX_ASSET_BYTES:-25000000}
       MAX_TOTAL_ASSET_BYTES: ${MAX_TOTAL_ASSET_BYTES:-120000000}
+    volumes:
+      - ./config/.env:/app/.env:ro
     expose:
       - "8000"
     restart: unless-stopped

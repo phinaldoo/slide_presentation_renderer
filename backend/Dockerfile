@@ -17,10 +17,13 @@ RUN npm --prefix /app/v2 install --omit=dev --no-audit --no-fund
 COPY backend /app/backend
 COPY v1 /app/v1
 COPY v2/index.js /app/v2/index.js
+COPY backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 RUN useradd --create-home --uid 10001 appuser && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips=*"]
