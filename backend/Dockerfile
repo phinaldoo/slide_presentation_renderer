@@ -11,6 +11,10 @@ WORKDIR /app
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 
+# Install Node.js and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
 COPY v2/package.json /app/v2/package.json
 RUN npm --prefix /app/v2 install --omit=dev --no-audit --no-fund
 
