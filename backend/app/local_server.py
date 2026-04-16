@@ -8,11 +8,13 @@ from pathlib import Path
 
 
 class _QuietHandler(SimpleHTTPRequestHandler):
+    """HTTP request handler that suppresses logging."""
     def log_message(self, format: str, *args: object) -> None:  # noqa: A003
         return
 
 
 class LocalStaticServer(AbstractContextManager["LocalStaticServer"]):
+    """Context manager for serving static files from a directory."""
     def __init__(self, root_dir: Path) -> None:
         self._root_dir = root_dir
         self._server: ThreadingHTTPServer | None = None
@@ -20,6 +22,7 @@ class LocalStaticServer(AbstractContextManager["LocalStaticServer"]):
         self.base_url: str = ""
 
     def __enter__(self) -> "LocalStaticServer":
+        """Start the local static server."""
         handler = partial(_QuietHandler, directory=str(self._root_dir))
         self._server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         self._server.daemon_threads = True
@@ -31,6 +34,7 @@ class LocalStaticServer(AbstractContextManager["LocalStaticServer"]):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Stop the local static server."""
         if self._server is not None:
             self._server.shutdown()
             self._server.server_close()

@@ -32,6 +32,7 @@ _DISALLOWED_DEFAULT_KEYS = {
 
 
 def validate_auth_configuration() -> None:
+    """Validate API key authentication configuration."""
     if not AUTH_CONFIG.enabled:
         return
     if not _HEADER_NAME_RE.fullmatch(_API_KEY_HEADER_NAME):
@@ -49,6 +50,7 @@ def validate_auth_configuration() -> None:
 
 
 def is_request_api_key_authorized(request: Request) -> bool:
+    """Check if request contains valid API key."""
     if not AUTH_CONFIG.enabled:
         return True
 
@@ -64,13 +66,15 @@ def is_request_api_key_authorized(request: Request) -> bool:
     if not presented_key:
         return False
 
+    presented_key_normalized = presented_key.lower()
     for expected_key in AUTH_CONFIG.keys:
-        if secrets.compare_digest(presented_key, expected_key):
+        if secrets.compare_digest(presented_key_normalized, expected_key.lower()):
             return True
     return False
 
 
 async def require_api_key(request: Request) -> None:
+    """Require valid API key for request, raising HTTPException if invalid."""
     if is_request_api_key_authorized(request):
         return
 

@@ -21,10 +21,12 @@ logger = logging.getLogger("slide_renderer")
 
 
 def _docs_enabled() -> bool:
+    """Check if API documentation is enabled."""
     return os.getenv("ENABLE_DOCS", "false").strip().lower() in {"1", "true", "yes"}
 
 
 def _allowed_hosts() -> list[str]:
+    """Get list of allowed hosts from environment."""
     raw = os.getenv("ALLOWED_HOSTS", "*")
     values = [value.strip() for value in raw.split(",") if value.strip()]
     return values or ["*"]
@@ -43,16 +45,19 @@ _render_slots = asyncio.Semaphore(SETTINGS.max_concurrent_renders)
 
 @app.on_event("startup")
 async def startup_checks() -> None:
+    """Run startup validation checks."""
     validate_auth_configuration()
 
 
 @app.get("/healthz")
 async def healthz() -> JSONResponse:
+    """Health check endpoint."""
     return JSONResponse({"status": "ok"})
 
 
 @app.get("/internal/auth/apikey", include_in_schema=False)
 async def internal_api_key_auth(request: Request) -> Response:
+    """Internal endpoint to validate API key authentication."""
     await require_api_key(request)
     return Response(status_code=204)
 
@@ -60,6 +65,7 @@ async def internal_api_key_auth(request: Request) -> Response:
 @app.post("/api/render")
 @app.post("/api/v1/render")
 async def render_endpoint(payload: RenderRequest, _: None = Depends(require_api_key)) -> Response:
+    """Render presentation HTML to PPTX with slide images."""
     acquired_slot = False
     try:
         await asyncio.wait_for(_render_slots.acquire(), timeout=0.05)

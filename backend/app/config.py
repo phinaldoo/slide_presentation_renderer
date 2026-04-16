@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 
 def _get_int(name: str, default: int, *, min_value: int) -> int:
+    """Get integer from environment variable with default and minimum value."""
     raw = os.getenv(name)
     if raw is None:
         return default
@@ -16,6 +17,7 @@ def _get_int(name: str, default: int, *, min_value: int) -> int:
 
 
 def _get_bool(name: str, default: bool) -> bool:
+    """Get boolean from environment variable with default."""
     raw = os.getenv(name)
     if raw is None:
         return default
@@ -23,6 +25,7 @@ def _get_bool(name: str, default: bool) -> bool:
 
 
 def _get_csv(name: str) -> tuple[str, ...]:
+    """Get comma-separated values from environment variable as tuple."""
     raw = os.getenv(name, "")
     values = [value.strip() for value in raw.split(",") if value.strip()]
     return tuple(values)

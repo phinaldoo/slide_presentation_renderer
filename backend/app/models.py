@@ -27,6 +27,7 @@ class InputFile(BaseModel):
     @field_validator("file_name")
     @classmethod
     def validate_file_name(cls, value: str) -> str:
+        """Validate file name for safety."""
         if "/" in value or "\\" in value:
             raise ValueError("file_name must not contain path separators")
         if not _SAFE_FILENAME_RE.fullmatch(value):
@@ -47,6 +48,7 @@ class RenderRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_input_files(self) -> "RenderRequest":
+        """Validate no duplicate file names in input files."""
         seen: set[str] = set()
         for input_file in self.input_files:
             if input_file.file_name in seen:

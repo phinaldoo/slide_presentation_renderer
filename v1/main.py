@@ -8,6 +8,7 @@ from render import html_file_to_pptx
 
 
 async def _run(args: argparse.Namespace) -> None:
+    """Run the HTML to PPTX conversion."""
     output_path = await html_file_to_pptx(
         args.html,
         output_dir=args.output_dir,
@@ -17,6 +18,7 @@ async def _run(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    """Main entry point for CLI HTML to PPTX conversion."""
     parser = argparse.ArgumentParser(description="Render HTML slides to PPTX")
     parser.add_argument(
         "html",

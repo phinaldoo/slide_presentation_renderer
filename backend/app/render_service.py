@@ -50,6 +50,7 @@ class RenderResult:
 
 
 async def render_presentation(request: RenderRequest) -> RenderResult:
+    """Render presentation HTML to PPTX with slide images."""
     if len(request.html) > SETTINGS.max_html_chars:
         raise RenderValidationError(
             f"html is too large (>{SETTINGS.max_html_chars} characters)"
@@ -128,6 +129,7 @@ def _build_render_archive(
     pptx_content: bytes,
     slide_images: list[tuple[str, bytes]],
 ) -> bytes:
+    """Build ZIP archive containing PPTX file and slide images."""
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(pptx_file_name, pptx_content)
@@ -137,6 +139,7 @@ def _build_render_archive(
 
 
 def _save_assets(request: RenderRequest, assets_dir: Path) -> None:
+    """Save input files to assets directory after validation."""
     total_bytes = 0
 
     for input_file in request.input_files:
@@ -165,6 +168,7 @@ def _save_assets(request: RenderRequest, assets_dir: Path) -> None:
 
 
 def _decode_base64(content: str) -> bytes:
+    """Decode base64 content, handling data URI prefix if present."""
     payload = content.strip()
     if payload.startswith("data:") and "," in payload:
         payload = payload.split(",", 1)[1]
@@ -172,6 +176,7 @@ def _decode_base64(content: str) -> bytes:
 
 
 def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> bool:
+    """Check if request URL is allowed based on origin policy."""
     if request_url.startswith(("data:", "blob:", "about:")):
         return True
     if not allowed_origin:
@@ -180,6 +185,7 @@ def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> boo
 
 
 async def _apply_request_guard(context, allowed_origin: str | None) -> None:
+    """Apply request guard to block disallowed origins."""
     if not allowed_origin:
         return
 
@@ -194,6 +200,7 @@ async def _apply_request_guard(context, allowed_origin: str | None) -> None:
 
 
 async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin: str) -> list[Path]:
+    """Render slides as PNG images using Playwright."""
     from playwright.async_api import async_playwright
 
     slide_images_dir = output_dir / "slides"
@@ -228,6 +235,7 @@ async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin:
 
 
 async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> Path:
+    """Render presentation using v1 renderer."""
     from v1.render import html_url_to_pptx
 
     return await html_url_to_pptx(
@@ -238,6 +246,7 @@ async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> P
 
 
 async def _render_v2(input_url: str, output_dir: Path, allowed_origin: str) -> Path:
+    """Render presentation using v2 Node.js renderer."""
     if not _V2_SCRIPT_PATH.exists():
         raise RenderExecutionError(f"v2 renderer script not found: {_V2_SCRIPT_PATH}")
 

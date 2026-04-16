@@ -15,6 +15,7 @@ SLIDE_BLEED = Inches(0.02)  # leichte Überlappung, um sichtbare Ränder zu verm
 
 
 def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> bool:
+    """Check if request URL is allowed based on origin policy."""
     if request_url.startswith(("data:", "blob:", "about:")):
         return True
     if not allowed_origin:
@@ -23,6 +24,7 @@ def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> boo
 
 
 async def _apply_request_guard(context, allowed_origin: str | None) -> None:
+    """Apply request guard to block disallowed origins."""
     if not allowed_origin:
         return
 
@@ -37,6 +39,7 @@ async def _apply_request_guard(context, allowed_origin: str | None) -> None:
 
 
 def _create_presentation() -> Presentation:
+    """Create a new 16:9 PowerPoint presentation."""
     prs = Presentation()
     prs.slide_width = Inches(16)
     prs.slide_height = Inches(9)
@@ -44,6 +47,7 @@ def _create_presentation() -> Presentation:
 
 
 def _save_presentation(prs: Presentation, output_dir: str | Path | None) -> Path:
+    """Save presentation to output directory with generated filename."""
     default_dir = Path("presentations") / datetime.now(timezone.utc).strftime("%Y-%m-%d")
     output_path = Path(output_dir) if output_dir else default_dir
     output_path.mkdir(parents=True, exist_ok=True)
@@ -53,6 +57,7 @@ def _save_presentation(prs: Presentation, output_dir: str | Path | None) -> Path
 
 
 async def _render_page_to_pptx(page, prs: Presentation, selector_to_use: str) -> None:
+    """Render page elements matching selector to PPTX slides."""
     sections = await page.locator(selector_to_use).all()
     count = len(sections)
     if count == 0:
