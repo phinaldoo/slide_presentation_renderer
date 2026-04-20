@@ -20,7 +20,15 @@ Production-ready Docker deployment for HTML-to-PowerPoint rendering using:
 - API key is required for all API requests.
 - Provide it via `X-API-Key` (default header) or `Authorization: Bearer <key>`.
 - API requests without a valid key return `401`.
+- `/docs` and `/openapi.json` are intentionally excluded from API key protection for browser access when docs are enabled.
 - The backend fails startup if `API_KEYS` is empty, duplicated, too short (<16), or left as placeholder values.
+
+WARNING: exposing `/docs` and `/openapi.json` without authentication is unsafe for production.
+
+- Docs endpoints must only be enabled in non-production environments.
+- `ENABLE_DOCS` controls docs exposure in normal operation.
+- `DEVELOPMENT_MODE` overrides `ENABLE_DOCS`; if `DEVELOPMENT_MODE=true`, docs endpoints are exposed even when `ENABLE_DOCS=false`.
+- There is no built-in environment detector that automatically blocks this in production; use deployment guardrails (below) to prevent accidental enablement.
 
 ### Request JSON
 
@@ -101,6 +109,7 @@ curl -X POST "http://localhost:8080/api/render" \
 See `.env.example` for defaults:
 
 - `NGINX_PORT`
+- `DEVELOPMENT_MODE`
 - `ENABLE_DOCS`
 - `ALLOWED_HOSTS`
 - `API_KEY_AUTH_ENABLED`
@@ -111,3 +120,30 @@ See `.env.example` for defaults:
 - `MAX_INPUT_FILES`
 - `MAX_ASSET_BYTES`
 - `MAX_TOTAL_ASSET_BYTES`
+
+WARNING: keep docs disabled in production.
+
+- `ENABLE_DOCS` should be `false` in production.
+- `DEVELOPMENT_MODE` must be `false` in production.
+- Explicit override behavior: `DEVELOPMENT_MODE=true` enables `/docs` and `/openapi.json` even when `ENABLE_DOCS=false`.
+
+## Docs exposure security trade-offs
+
+Enabling docs endpoints improves developer UX, but it also increases information disclosure risk:
+
+- Exposes your API surface area and available endpoints.
+- Exposes request/response schemas and field names.
+- Makes endpoint discovery and probing easier for attackers.
+
+Recommended mitigations when docs are needed:
+
+- Restrict docs access by source IP (VPN/corporate CIDR allowlist).
+- Protect docs with authentication at the proxy or gateway layer.
+- Feature-flag docs and only enable them temporarily for specific environments.
+
+## Deployment checklist
+
+- Set `DEVELOPMENT_MODE=false` in production.
+- Set `ENABLE_DOCS=false` in production unless there is an approved exception.
+- Add a startup validation routine (for example, `validateEnv` or `startup_checks`) that warns or fails startup if `DEVELOPMENT_MODE=true` is detected in production.
+- Verify effective runtime values at deploy time (container env, Compose overrides, Helm values, CI/CD variables).

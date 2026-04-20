@@ -5,7 +5,8 @@ services:
       dockerfile: backend/Dockerfile
     image: slide-renderer-backend:latest
     environment:
-      ENABLE_DOCS: ${ENABLE_DOCS:-false}
+      DEVELOPMENT_MODE: '${DEVELOPMENT_MODE:-}'
+      ENABLE_DOCS: '${ENABLE_DOCS:-false}'
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
       API_KEY_AUTH_ENABLED: ${API_KEY_AUTH_ENABLED:-true}
       API_KEYS: '${API_KEYS:-}'

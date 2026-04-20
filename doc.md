@@ -9,12 +9,12 @@ The Slide Presentation Renderer API converts HTML slide markup into a `.pptx` fi
 - **Alias endpoint:** `POST /api/v1/render`
 - **Response type:** ZIP bundle (`.zip`) containing the rendered PowerPoint and slide PNG previews
 
-The service runs behind nginx and enforces API key authentication at **both** layers:
+The render API runs behind nginx and enforces API key authentication at **both** layers:
 
 1. **nginx** (`auth_request` gate)
 2. **FastAPI** route dependency
 
-This dual validation prevents accidental bypass and protects the backend even if accessed directly.
+This dual validation prevents accidental bypass and protects render endpoints even if accessed directly.
 
 ---
 
@@ -36,14 +36,27 @@ If neither is valid, the API returns:
 
 - `POST /api/render` -> **requires API key**
 - `POST /api/v1/render` -> **requires API key**
-- `GET /docs` -> **requires API key** (if docs enabled)
-- `GET /openapi.json` -> **requires API key** (if docs enabled)
+- `GET /docs` -> no API key required (when docs are enabled)
+- `GET /openapi.json` -> no API key required (when docs are enabled)
 - `GET /healthz` -> no API key required
 
-### 2.3 Auth-related environment variables
+### 2.3 Environment variables (auth + docs)
 
+- `DEVELOPMENT_MODE` (default: `false`)
+- `ENABLE_DOCS` (default: `false`; controls whether `/docs` and `/openapi.json` are exposed)
 - `API_KEY_AUTH_ENABLED` (default: `true`)
 - `API_KEYS` (comma-separated key list, each key >= 16 chars)
+
+`DEVELOPMENT_MODE` takes precedence over `ENABLE_DOCS`: if `DEVELOPMENT_MODE=true`, docs endpoints are enabled even when `ENABLE_DOCS=false`.
+
+**WARNING:** `DEVELOPMENT_MODE` must never be `true` in production.
+
+Accepted boolean values follow the backend parser behavior:
+
+- `true` values: `1`, `true`, `yes`, `on` (case-insensitive)
+- any other value (or unset): treated as `false`
+
+Recommended hardening: add a startup/runtime check (for example in `startup_checks` or `validateEnv`) that logs a warning or fails startup when the docs override is active (`DEVELOPMENT_MODE=true` and `ENABLE_DOCS=false`) so operators are alerted.
 
 When auth is enabled, backend startup fails if keys are missing, duplicated, shorter than 16 chars, or still set to placeholder values.
 

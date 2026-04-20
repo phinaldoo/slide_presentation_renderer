@@ -22,7 +22,7 @@ logger = logging.getLogger("slide_renderer")
 
 def _docs_enabled() -> bool:
     """Check if API documentation is enabled."""
-    return os.getenv("ENABLE_DOCS", "false").strip().lower() in {"1", "true", "yes"}
+    return SETTINGS.development_mode or SETTINGS.enable_docs
 
 
 def _allowed_hosts() -> list[str]:

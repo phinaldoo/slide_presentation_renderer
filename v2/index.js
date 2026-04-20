@@ -69,6 +69,11 @@ function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val));
 }
 
+function safeParseFloat(value, fallback = 0) {
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function isBold(weight) {
   return parseInt(weight) >= 600;
 }
@@ -111,6 +116,14 @@ const FONT_MAP = {
 function mapFont(f) {
   const name = (f || "Arial").replace(/['"]/g, "").split(",")[0].trim();
   return FONT_MAP[name] || name;
+}
+
+function lineHeightMultiple(lineHeight, fontSizePx) {
+  if (!lineHeight || lineHeight === "normal") return 1.15;
+  const lineHeightPx = safeParseFloat(lineHeight, 0);
+  const fontSize = Math.max(1, safeParseFloat(fontSizePx, 0));
+  if (!lineHeightPx) return 1.15;
+  return clamp(lineHeightPx / fontSize, 0.6, 4);
 }
 
 // ---------------------------------------------------------------------------
@@ -172,9 +185,88 @@ function browserCollectTextRuns(el, inheritedCs) {
 function browserExtractSlides() {
   const slides = document.querySelectorAll(".slide");
   const results = [];
+  let captureCounter = 0;
 
   function isTransparent(c) {
     return !c || c === "rgba(0, 0, 0, 0)" || c === "transparent";
+  }
+
+  function parsePx(value) {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function normalizeObjectPosition(value) {
+    const compact = (value || "50% 50%").trim().replace(/\s+/g, " ").toLowerCase();
+    if (!compact) return "50% 50%";
+
+    const tokens = compact.split(" ").filter(Boolean);
+    const normalizeToken = (token) => {
+      if (token === "left") return "0%";
+      if (token === "right") return "100%";
+      if (token === "top") return "0%";
+      if (token === "bottom") return "100%";
+      if (token === "center") return "50%";
+      return token;
+    };
+    const classifyToken = (token) => {
+      if (token === "left" || token === "right") return { axis: "x", value: normalizeToken(token) };
+      if (token === "top" || token === "bottom") return { axis: "y", value: normalizeToken(token) };
+      if (token === "center") return { axis: "center", value: "50%" };
+      return { axis: "value", value: normalizeToken(token) };
+    };
+
+    if (tokens.length === 1) {
+      const single = classifyToken(tokens[0]);
+      if (single.axis === "y") return `50% ${single.value}`;
+      if (single.axis === "center") return "50% 50%";
+      return `${single.value} 50%`;
+    }
+
+    let x = null;
+    let y = null;
+    let centerCount = 0;
+    const valueTokens = [];
+
+    for (const token of tokens) {
+      const info = classifyToken(token);
+      if (info.axis === "x" && x === null) {
+        x = info.value;
+        continue;
+      }
+      if (info.axis === "y" && y === null) {
+        y = info.value;
+        continue;
+      }
+      if (info.axis === "center") {
+        centerCount += 1;
+        continue;
+      }
+      valueTokens.push(info.value);
+    }
+
+    for (const valueToken of valueTokens) {
+      if (x === null) {
+        x = valueToken;
+        continue;
+      }
+      if (y === null) {
+        y = valueToken;
+      }
+    }
+
+    while (centerCount > 0) {
+      if (x === null) {
+        x = "50%";
+      } else if (y === null) {
+        y = "50%";
+      }
+      centerCount -= 1;
+    }
+
+    if (x === null) x = "50%";
+    if (y === null) y = "50%";
+    return `${x} ${y}`;
   }
 
   function hasBg(cs) {
@@ -187,6 +279,36 @@ function browserExtractSlides() {
       if ((parseFloat(cs["border" + s + "Width"]) || 0) > 0 && cs["border" + s + "Style"] !== "none") return true;
     }
     return false;
+  }
+
+  function hasOverflowClip(cs) {
+    return (
+      cs.overflow === "hidden" ||
+      cs.overflow === "clip" ||
+      cs.overflowX === "hidden" ||
+      cs.overflowX === "clip" ||
+      cs.overflowY === "hidden" ||
+      cs.overflowY === "clip"
+    );
+  }
+
+  function isBlockDisplay(display) {
+    return (
+      display === "block" ||
+      display === "flex" ||
+      display === "grid" ||
+      display === "inline-block" ||
+      display === "table" ||
+      display === "table-row" ||
+      display === "table-row-group" ||
+      display === "table-header-group" ||
+      display === "table-footer-group" ||
+      display === "table-column" ||
+      display === "table-column-group" ||
+      display === "table-cell" ||
+      display === "table-caption" ||
+      display === "list-item"
+    );
   }
 
   function flexValign(parentCs) {
@@ -222,56 +344,203 @@ function browserExtractSlides() {
     return null;
   }
 
-  // Collect runs helper (inlined for page.evaluate scope)
-  function collectRuns(el) {
-    const runs = [];
-    for (const child of el.childNodes) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const t = child.textContent;
-        const trimmed = t.trim();
-        if (!trimmed) {
-          if (t.length > 0 && runs.length > 0) runs.push({ text: " ", inherited: true });
-          continue;
-        }
-        runs.push({ text: trimmed, inherited: true });
-      } else if (child.nodeType === Node.ELEMENT_NODE) {
-        const tag = child.tagName.toLowerCase();
-        if (
-          [
-            "svg",
-            "img",
-            "div",
-            "ul",
-            "ol",
-            "table",
-            "section",
-            "nav",
-            "header",
-            "footer",
-            "article",
-            "thead",
-            "tbody",
-            "tfoot",
-            "tr",
-          ].includes(tag)
-        )
-          continue;
-        const cs = window.getComputedStyle(child);
-        if (cs.display === "none" || cs.visibility === "hidden") continue;
-        const innerText = child.textContent.trim();
-        if (!innerText) continue;
-        runs.push({
-          text: innerText,
-          fontFamily: cs.fontFamily,
-          fontSize: parseFloat(cs.fontSize),
-          fontWeight: cs.fontWeight,
-          fontStyle: cs.fontStyle,
-          color: cs.color,
-          textDecoration: cs.textDecorationLine || cs.textDecoration,
-        });
-      }
+  function getCaptureId(el) {
+    if (!el.hasAttribute("data-pptx-id")) {
+      captureCounter += 1;
+      el.setAttribute("data-pptx-id", `pptx-${captureCounter}`);
     }
+    return el.getAttribute("data-pptx-id");
+  }
+
+  function hasPseudoTextOrComplexContent(el) {
+    for (const pseudo of ["::before", "::after"]) {
+      const cs = window.getComputedStyle(el, pseudo);
+      const content = cs.content || "";
+      if (!content || content === "none" || content === "normal") continue;
+      const textContent = content.replace(/^['"]|['"]$/g, "");
+      const hasText = /[^\s]/.test(textContent);
+      const isComplex =
+        (cs.transform && cs.transform !== "none") ||
+        (cs.filter && cs.filter !== "none") ||
+        (cs.clipPath && cs.clipPath !== "none") ||
+        (cs.maskImage && cs.maskImage !== "none") ||
+        (cs.webkitMaskImage && cs.webkitMaskImage !== "none") ||
+        (cs.boxShadow && cs.boxShadow !== "none");
+      if (hasText || isComplex) return true;
+    }
+    return false;
+  }
+
+  function shouldRasterizeElement(el, cs, tag) {
+    if (["svg", "canvas", "video", "table", "iframe", "object", "embed"].includes(tag)) {
+      return true;
+    }
+
+    if (cs.transform && cs.transform !== "none") return true;
+    if (cs.filter && cs.filter !== "none") return true;
+    if (cs.backdropFilter && cs.backdropFilter !== "none") return true;
+    if (cs.clipPath && cs.clipPath !== "none") return true;
+    if (cs.maskImage && cs.maskImage !== "none") return true;
+    if (cs.webkitMaskImage && cs.webkitMaskImage !== "none") return true;
+    if (cs.mixBlendMode && cs.mixBlendMode !== "normal") return true;
+    if (cs.boxShadow && cs.boxShadow !== "none") return true;
+    if (cs.borderImageSource && cs.borderImageSource !== "none") return true;
+
+    if (tag === "img") {
+      const objectFit = (cs.objectFit || "fill").trim();
+      const objectPosition = cs.objectPosition || "50% 50%";
+      const normalizedObjectPosition = normalizeObjectPosition(objectPosition);
+      if (objectFit !== "fill" || normalizedObjectPosition !== "50% 50%") return true;
+      if (parsePx(cs.borderRadius) > 0) return true;
+    }
+
+    if (parsePx(cs.borderRadius) > 0 && hasOverflowClip(cs) && el.children.length > 0) {
+      return true;
+    }
+
+    if (hasPseudoTextOrComplexContent(el)) return true;
+
+    return false;
+  }
+
+  function normalizeTextValue(text, whiteSpace) {
+    if (!text) return "";
+    const normalized = text.replace(/\r\n/g, "\n");
+    if (
+      whiteSpace === "pre" ||
+      whiteSpace === "pre-wrap" ||
+      whiteSpace === "break-spaces"
+    ) {
+      return normalized;
+    }
+    if (whiteSpace === "pre-line") {
+      return normalized.replace(/[^\S\n]+/g, " ");
+    }
+    return normalized.replace(/\s+/g, " ");
+  }
+
+  function appendRun(runs, nextRun) {
+    if (!nextRun || !nextRun.text) return;
+    if (runs.length === 0) {
+      runs.push(nextRun);
+      return;
+    }
+
+    const prev = runs[runs.length - 1];
+    const sameStyle =
+      !!prev.inherited === !!nextRun.inherited &&
+      (prev.fontFamily || "") === (nextRun.fontFamily || "") &&
+      (prev.fontSize || 0) === (nextRun.fontSize || 0) &&
+      (prev.fontWeight || "") === (nextRun.fontWeight || "") &&
+      (prev.fontStyle || "") === (nextRun.fontStyle || "") &&
+      (prev.color || "") === (nextRun.color || "") &&
+      (prev.textDecoration || "") === (nextRun.textDecoration || "");
+
+    if (sameStyle) {
+      prev.text += nextRun.text;
+      return;
+    }
+
+    runs.push(nextRun);
+  }
+
+  function trimRuns(runs) {
+    while (runs.length > 0 && !runs[0].text.trim()) runs.shift();
+    while (runs.length > 0 && !runs[runs.length - 1].text.trim()) runs.pop();
+    if (runs.length === 0) return runs;
+
+    runs[0].text = runs[0].text.replace(/^[ \t]+/, "");
+    runs[runs.length - 1].text = runs[runs.length - 1].text.replace(/[ \t]+$/, "");
+
+    for (let i = runs.length - 1; i >= 0; i -= 1) {
+      if (!runs[i].text) runs.splice(i, 1);
+    }
+
     return runs;
+  }
+
+  function collectRunsFromNode(node, inheritedStyle, runs) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = normalizeTextValue(node.textContent || "", inheritedStyle.whiteSpace);
+      if (!text) return;
+      appendRun(runs, { text, inherited: true });
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const tag = node.tagName.toLowerCase();
+    if (tag === "br") {
+      appendRun(runs, { text: "\n", inherited: true });
+      return;
+    }
+    if (["img", "svg", "table", "canvas", "video", "iframe", "object", "embed"].includes(tag)) {
+      return;
+    }
+
+    const cs = window.getComputedStyle(node);
+    if (cs.display === "none" || cs.visibility === "hidden") return;
+    if (isBlockDisplay(cs.display || "")) return;
+
+    const nextStyle = {
+      whiteSpace: cs.whiteSpace || inheritedStyle.whiteSpace,
+      fontFamily: cs.fontFamily || inheritedStyle.fontFamily,
+      fontSize: parsePx(cs.fontSize) || inheritedStyle.fontSize,
+      fontWeight: cs.fontWeight || inheritedStyle.fontWeight,
+      fontStyle: cs.fontStyle || inheritedStyle.fontStyle,
+      color: cs.color || inheritedStyle.color,
+      textDecoration: cs.textDecorationLine || cs.textDecoration || inheritedStyle.textDecoration,
+    };
+
+    const hasElementChildren = Array.from(node.childNodes).some(
+      (child) => child.nodeType === Node.ELEMENT_NODE
+    );
+
+    if (!hasElementChildren) {
+      const text = normalizeTextValue(node.textContent || "", nextStyle.whiteSpace);
+      if (!text) return;
+      appendRun(runs, {
+        text,
+        fontFamily: nextStyle.fontFamily,
+        fontSize: nextStyle.fontSize,
+        fontWeight: nextStyle.fontWeight,
+        fontStyle: nextStyle.fontStyle,
+        color: nextStyle.color,
+        textDecoration: nextStyle.textDecoration,
+      });
+      return;
+    }
+
+    for (const child of node.childNodes) {
+      collectRunsFromNode(child, nextStyle, runs);
+    }
+  }
+
+  function collectRuns(el, cs) {
+    const runs = [];
+    const inheritedStyle = {
+      whiteSpace: cs.whiteSpace || "normal",
+      fontFamily: cs.fontFamily,
+      fontSize: parsePx(cs.fontSize),
+      fontWeight: cs.fontWeight,
+      fontStyle: cs.fontStyle,
+      color: cs.color,
+      textDecoration: cs.textDecorationLine || cs.textDecoration,
+    };
+
+    for (const child of el.childNodes) {
+      collectRunsFromNode(child, inheritedStyle, runs);
+    }
+    return trimRuns(runs);
+  }
+
+  function hasBlockChildren(el) {
+    for (const ch of el.children) {
+      const chCs = window.getComputedStyle(ch);
+      if (chCs.display === "none" || chCs.visibility === "hidden") continue;
+      if (isBlockDisplay(chCs.display || "")) return true;
+    }
+    return false;
   }
 
   for (const slide of slides) {
@@ -298,10 +567,11 @@ function browserExtractSlides() {
 
       const tag = el.tagName.toLowerCase();
 
-      // ---- SVG: mark for screenshot later ----
-      if (tag === "svg") {
+      if (shouldRasterizeElement(el, cs, tag)) {
+        el.setAttribute("data-pptx-rasterized", "1");
         slideData.items.push({
-          type: "svg_region",
+          type: "capture_region",
+          captureId: getCaptureId(el),
           rect: { x: rx, y: ry, width: rw, height: rh },
           absRect: { x: r.x, y: r.y, width: rw, height: rh },
           zIndex: depth,
@@ -336,15 +606,11 @@ function browserExtractSlides() {
       }
 
       let maskParentRadius = null;
-      if (el.parentElement && (parseFloat(cs.borderRadius) || 0) < 1) {
+      if (el.parentElement && parsePx(cs.borderRadius) < 1) {
         const parent = el.parentElement;
         const pcs = parentCs || window.getComputedStyle(parent);
-        const parentRadius = parseFloat(pcs.borderRadius) || 0;
-        const overflowHidden =
-          pcs.overflow === "hidden" ||
-          pcs.overflow === "clip" ||
-          pcs.overflowX === "hidden" ||
-          pcs.overflowY === "hidden";
+        const parentRadius = parsePx(pcs.borderRadius);
+        const overflowHidden = hasOverflowClip(pcs);
         if (parentRadius > 3 && overflowHidden) {
           const pr = parent.getBoundingClientRect();
           const epsilon = 1.5;
@@ -372,11 +638,11 @@ function browserExtractSlides() {
           absRect: { x: r.x, y: r.y, width: rw, height: rh },
           backgroundColor: cs.backgroundColor,
           backgroundImage: cs.backgroundImage,
-          borderRadius: parseFloat(cs.borderRadius) || 0,
-          borderTop: { w: parseFloat(cs.borderTopWidth) || 0, color: cs.borderTopColor, style: cs.borderTopStyle },
-          borderRight: { w: parseFloat(cs.borderRightWidth) || 0, color: cs.borderRightColor, style: cs.borderRightStyle },
-          borderBottom: { w: parseFloat(cs.borderBottomWidth) || 0, color: cs.borderBottomColor, style: cs.borderBottomStyle },
-          borderLeft: { w: parseFloat(cs.borderLeftWidth) || 0, color: cs.borderLeftColor, style: cs.borderLeftStyle },
+          borderRadius: parsePx(cs.borderRadius),
+          borderTop: { w: parsePx(cs.borderTopWidth), color: cs.borderTopColor, style: cs.borderTopStyle },
+          borderRight: { w: parsePx(cs.borderRightWidth), color: cs.borderRightColor, style: cs.borderRightStyle },
+          borderBottom: { w: parsePx(cs.borderBottomWidth), color: cs.borderBottomColor, style: cs.borderBottomStyle },
+          borderLeft: { w: parsePx(cs.borderLeftWidth), color: cs.borderLeftColor, style: cs.borderLeftStyle },
           zIndex: depth,
           opacity,
           maskParentRadius,
@@ -384,39 +650,10 @@ function browserExtractSlides() {
       }
 
       // ---- Emit text ----
-      // Collect rich-text runs from direct children
-      const runs = collectRuns(el);
+      const runs = collectRuns(el, cs);
       let emittedInlineText = false;
       if (runs.length > 0) {
-        const hasOnlyInherited = runs.every((r) => r.inherited);
-        // Only emit if there's actual text that isn't fully covered by child element traversal
-        // Check: does the element have child *elements* that are block-level? If so, their text
-        // will be collected when we traverse them. Only emit text here if all children are inline.
-        let hasBlockChildren = false;
-        for (const ch of el.children) {
-          const chCs = window.getComputedStyle(ch);
-          const childDisplay = chCs.display || "";
-          const isBlockish =
-            childDisplay === "block" ||
-            childDisplay === "flex" ||
-            childDisplay === "grid" ||
-            childDisplay === "inline-block" ||
-            childDisplay === "table" ||
-            childDisplay === "table-row" ||
-            childDisplay === "table-row-group" ||
-            childDisplay === "table-header-group" ||
-            childDisplay === "table-footer-group" ||
-            childDisplay === "table-column" ||
-            childDisplay === "table-column-group" ||
-            childDisplay === "table-cell" ||
-            childDisplay === "table-caption";
-          if (isBlockish) {
-            hasBlockChildren = true;
-            break;
-          }
-        }
-
-        if (!hasBlockChildren) {
+        if (!hasBlockChildren(el)) {
           slideData.items.push({
             type: "text",
             rect: { x: rx, y: ry, width: rw, height: rh },
@@ -428,13 +665,13 @@ function browserExtractSlides() {
             color: cs.color,
             textAlign: inferHorizontalAlign(cs),
             verticalAlign: valign,
-            letterSpacing: parseFloat(cs.letterSpacing) || 0,
+            letterSpacing: parsePx(cs.letterSpacing),
             lineHeight: cs.lineHeight,
             textTransform: cs.textTransform,
-            paddingTop: parseFloat(cs.paddingTop) || 0,
-            paddingRight: parseFloat(cs.paddingRight) || 0,
-            paddingBottom: parseFloat(cs.paddingBottom) || 0,
-            paddingLeft: parseFloat(cs.paddingLeft) || 0,
+            paddingTop: parsePx(cs.paddingTop),
+            paddingRight: parsePx(cs.paddingRight),
+            paddingBottom: parsePx(cs.paddingBottom),
+            paddingLeft: parsePx(cs.paddingLeft),
             zIndex: depth + 0.5,
             opacity,
           });
@@ -479,7 +716,7 @@ function browserExtractSlides() {
 }
 
 // ---------------------------------------------------------------------------
-// Post-processing: screenshot SVGs and gradient/conic regions from the page
+// Post-processing: screenshot captured elements and gradient regions
 // ---------------------------------------------------------------------------
 async function screenshotRegions(page, slidesData) {
   for (let sIdx = 0; sIdx < slidesData.length; sIdx++) {
@@ -487,7 +724,7 @@ async function screenshotRegions(page, slidesData) {
     for (let i = 0; i < sd.items.length; i++) {
       const item = sd.items[i];
 
-      const isSvg = item.type === "svg_region";
+      const isCapturedRegion = item.type === "capture_region";
       const isGradient =
         item.type === "shape" &&
         !item._fromPseudo &&
@@ -495,7 +732,7 @@ async function screenshotRegions(page, slidesData) {
         (item.backgroundImage.includes("gradient") ||
           item.backgroundImage.includes("url("));
 
-      if (!isSvg && !isGradient) continue;
+      if (!isCapturedRegion && !isGradient) continue;
 
       const absR = item.absRect || {
         x: sd.slideRect.x + item.rect.x,
@@ -505,23 +742,30 @@ async function screenshotRegions(page, slidesData) {
       };
       if (absR.width < 2 || absR.height < 2) continue;
 
-      // SVG regions: direct page screenshot (no text overlap concern)
-      if (isSvg) {
+      if (isCapturedRegion) {
         try {
-          const buf = await page.screenshot({
-            clip: {
-              x: Math.max(0, Math.round(absR.x)),
-              y: Math.max(0, Math.round(absR.y)),
-              width: Math.round(Math.min(absR.width, SLIDE_W_PX)),
-              height: Math.round(Math.min(absR.height, SLIDE_H_PX)),
-            },
-            type: "png",
-          });
+          const locator = page.locator(`[data-pptx-id="${item.captureId}"]`);
+          await locator.first().waitFor({ state: "attached", timeout: 1000 });
+          const buf = await locator.first().screenshot({ type: "png" });
           item.type = "image";
           item.src = `data:image/png;base64,${buf.toString("base64")}`;
         } catch (_) {
-          item.type = "image";
-          item.src = null;
+          try {
+            const buf = await page.screenshot({
+              clip: {
+                x: Math.max(0, Math.round(absR.x)),
+                y: Math.max(0, Math.round(absR.y)),
+                width: Math.round(Math.min(absR.width, SLIDE_W_PX)),
+                height: Math.round(Math.min(absR.height, SLIDE_H_PX)),
+              },
+              type: "png",
+            });
+            item.type = "image";
+            item.src = `data:image/png;base64,${buf.toString("base64")}`;
+          } catch (_) {
+            item.type = "image";
+            item.src = null;
+          }
         }
         continue;
       }
@@ -616,10 +860,16 @@ async function extractPseudoElements(page, slidesData) {
   const all = await page.evaluate(() => {
     const slides = document.querySelectorAll(".slide");
     const result = [];
+    const parsePx = (value) => {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
     slides.forEach((slide) => {
       const sr = slide.getBoundingClientRect();
       const items = [];
       function check(el, pseudo) {
+        if (el.closest("[data-pptx-rasterized='1']")) return;
         const cs = window.getComputedStyle(el, pseudo);
         if (!cs.content || cs.content === "none" || cs.content === "normal") return;
         const bg = cs.backgroundColor;
@@ -627,15 +877,20 @@ async function extractPseudoElements(page, slidesData) {
         const hasBg =
           (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") ||
           (bgImg && bgImg !== "none");
-        if (!hasBg) return;
+        const hasBorder =
+          (parsePx(cs.borderTopWidth) > 0 && cs.borderTopStyle !== "none") ||
+          (parsePx(cs.borderRightWidth) > 0 && cs.borderRightStyle !== "none") ||
+          (parsePx(cs.borderBottomWidth) > 0 && cs.borderBottomStyle !== "none") ||
+          (parsePx(cs.borderLeftWidth) > 0 && cs.borderLeftStyle !== "none");
+        if (!hasBg && !hasBorder) return;
         const pr = el.getBoundingClientRect();
-        let w = parseFloat(cs.width) || pr.width;
-        let h = parseFloat(cs.height) || pr.height;
+        let w = parsePx(cs.width) || pr.width;
+        let h = parsePx(cs.height) || pr.height;
         let x = pr.x - sr.x;
         let y = pr.y - sr.y;
         if (cs.position === "absolute") {
-          if (!isNaN(parseFloat(cs.top))) y += parseFloat(cs.top);
-          if (!isNaN(parseFloat(cs.left))) x += parseFloat(cs.left);
+          if (!Number.isNaN(parseFloat(cs.top))) y += parseFloat(cs.top);
+          if (!Number.isNaN(parseFloat(cs.left))) x += parseFloat(cs.left);
         }
         if (w < 2 || h < 2) return;
         items.push({
@@ -644,11 +899,11 @@ async function extractPseudoElements(page, slidesData) {
           absRect: { x: sr.x + x, y: sr.y + y, width: w, height: h },
           backgroundColor: bg,
           backgroundImage: bgImg,
-          borderRadius: parseFloat(cs.borderRadius) || 0,
-          borderTop: { w: 0, color: "rgba(0,0,0,0)", style: "none" },
-          borderRight: { w: 0, color: "rgba(0,0,0,0)", style: "none" },
-          borderBottom: { w: 0, color: "rgba(0,0,0,0)", style: "none" },
-          borderLeft: { w: 0, color: "rgba(0,0,0,0)", style: "none" },
+          borderRadius: parsePx(cs.borderRadius),
+          borderTop: { w: parsePx(cs.borderTopWidth), color: cs.borderTopColor, style: cs.borderTopStyle },
+          borderRight: { w: parsePx(cs.borderRightWidth), color: cs.borderRightColor, style: cs.borderRightStyle },
+          borderBottom: { w: parsePx(cs.borderBottomWidth), color: cs.borderBottomColor, style: cs.borderBottomStyle },
+          borderLeft: { w: parsePx(cs.borderLeftWidth), color: cs.borderLeftColor, style: cs.borderLeftStyle },
           zIndex: -1,
           opacity: parseFloat(cs.opacity) || 1,
           _fromPseudo: true,
@@ -678,6 +933,7 @@ async function extractListBullets(page, slidesData) {
       const sr = slide.getBoundingClientRect();
       const items = [];
       slide.querySelectorAll("li").forEach((li) => {
+        if (li.closest("[data-pptx-rasterized='1']")) return;
         const cs = window.getComputedStyle(li, "::before");
         if (!cs.content || cs.content === "none" || cs.content === "normal") return;
         const bg = cs.backgroundColor;
@@ -707,48 +963,6 @@ async function extractListBullets(page, slidesData) {
   });
   for (let i = 0; i < slidesData.length && i < all.length; i++) {
     slidesData[i].items.push(...all[i]);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Post-processing: screenshot full table regions
-// ---------------------------------------------------------------------------
-async function screenshotTableRegions(page, slidesData) {
-  for (let sIdx = 0; sIdx < slidesData.length; sIdx++) {
-    const sd = slidesData[sIdx];
-    const rects = await page.evaluate((si) => {
-      const slides = document.querySelectorAll(".slide");
-      const slide = slides[si];
-      if (!slide) return [];
-      const sr = slide.getBoundingClientRect();
-      const out = [];
-      slide.querySelectorAll("table").forEach((table) => {
-        const r = table.getBoundingClientRect();
-        if (!r || r.width < 2 || r.height < 2) return;
-        out.push({ ax: r.x, ay: r.y, rx: r.x - sr.x, ry: r.y - sr.y, w: r.width, h: r.height });
-      });
-      return out;
-    }, sIdx);
-
-    for (const r of rects) {
-      if (r.w < 2 || r.h < 2) continue;
-      try {
-        const clip = {
-          x: Math.max(0, r.ax),
-          y: Math.max(0, r.ay),
-          width: Math.round(Math.min(r.w, SLIDE_W_PX)),
-          height: Math.round(Math.min(r.h, SLIDE_H_PX)),
-        };
-        const buf = await page.screenshot({ clip, type: "png" });
-        sd.items.push({
-          type: "image",
-          rect: { x: r.rx, y: r.ry, width: r.w, height: r.h },
-          src: `data:image/png;base64,${buf.toString("base64")}`,
-          zIndex: 120,
-          opacity: 1,
-        });
-      } catch (_) {}
-    }
   }
 }
 
@@ -935,15 +1149,10 @@ function addBorderOverlay(slide, pres, x, y, w, h, item, bT, bR, bB, bL) {
 // PPTX Generation: Text
 // ---------------------------------------------------------------------------
 function addTextToPptx(slide, item) {
-  const padLeft = item.paddingLeft || 0;
-  const padRight = item.paddingRight || 0;
-  const padTop = item.paddingTop || 0;
-  const padBottom = item.paddingBottom || 0;
-
-  let pxX = item.rect.x + padLeft;
-  let pxY = item.rect.y + padTop;
-  let pxW = item.rect.width - padLeft - padRight;
-  let pxH = item.rect.height - padTop - padBottom;
+  let pxX = item.rect.x;
+  let pxY = item.rect.y;
+  let pxW = item.rect.width;
+  let pxH = item.rect.height;
 
   pxX = clamp(pxX, 0, SLIDE_W_PX);
   pxY = clamp(pxY, 0, SLIDE_H_PX);
@@ -966,6 +1175,11 @@ function addTextToPptx(slide, item) {
   const defaultItalic = item.fontStyle === "italic";
   const defaultColor = rgbToHex(item.color) || "000000";
   const transform = item.textTransform;
+  const charSpace = item.letterSpacing
+    ? Math.round(pxToPt(item.letterSpacing) * 100) / 100
+    : 0;
+  const textLineSpacingMultiple =
+    Math.round(lineHeightMultiple(item.lineHeight, item.fontSize) * 100) / 100;
 
   const pptxRuns = [];
   let allEmpty = true;
@@ -998,6 +1212,7 @@ function addTextToPptx(slide, item) {
         runOpts.options.underline = { style: "sng" };
       }
     }
+    if (charSpace) runOpts.options.charSpace = charSpace;
     pptxRuns.push(runOpts);
   }
 
@@ -1023,7 +1238,7 @@ function addTextToPptx(slide, item) {
       margin,
       paraSpaceBefore: 0,
       paraSpaceAfter: 0,
-      lineSpacingMultiple: 1.0,
+      lineSpacingMultiple: textLineSpacingMultiple,
       transparency: item.opacity < 0.3 ? Math.round((1 - item.opacity) * 100) : 0,
     });
   } catch (e) {
@@ -1100,6 +1315,12 @@ async function main() {
   console.log("2. Loading HTML...");
   await page.goto(inputTarget, { waitUntil: "networkidle", timeout: 30000 });
   await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      })
+  );
   await page.waitForTimeout(1500);
 
   // 2. DOM extraction
@@ -1113,19 +1334,15 @@ async function main() {
   await extractPseudoElements(page, slidesData);
   await extractListBullets(page, slidesData);
 
-  // 4. Screenshot SVGs, gradients, conic-gradients
-  console.log("5. Screenshotting SVGs & gradient regions...");
+  // 4. Screenshot captured regions, gradients, conic-gradients
+  console.log("5. Screenshotting complex regions...");
   await screenshotRegions(page, slidesData);
-
-  // 5. Screenshot table regions
-  console.log("6. Screenshotting table regions...");
-  await screenshotTableRegions(page, slidesData);
 
   await browser.close();
   console.log("   Browser closed.");
 
-  // 6. Generate PPTX
-  console.log("7. Generating PowerPoint...");
+  // 5. Generate PPTX
+  console.log("6. Generating PowerPoint...");
   const pres = new PptxGenJS();
   pres.defineLayout({ name: "CUSTOM_16x9", width: SLIDE_W_IN, height: SLIDE_H_IN });
   pres.layout = "CUSTOM_16x9";
@@ -1149,9 +1366,9 @@ async function main() {
     }
   }
 
-  // 7. Save
+  // 6. Save
   const outputPath = path.resolve(OUTPUT_FILE);
-  console.log(`8. Saving → ${outputPath}`);
+  console.log(`7. Saving → ${outputPath}`);
   await pres.writeFile({ fileName: outputPath });
   console.log(`\n✅ Done! ${slidesData.length} slides → ${outputPath}\n`);
 }

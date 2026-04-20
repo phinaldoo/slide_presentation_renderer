@@ -33,6 +33,8 @@ def _get_csv(name: str) -> tuple[str, ...]:
 
 @dataclass(frozen=True)
 class Settings:
+    development_mode: bool
+    enable_docs: bool
     render_timeout_seconds: int
     max_concurrent_renders: int
     api_key_auth_enabled: bool
@@ -44,6 +46,8 @@ class Settings:
 
 
 SETTINGS = Settings(
+    development_mode=_get_bool("DEVELOPMENT_MODE", False),
+    enable_docs=_get_bool("ENABLE_DOCS", False),
     render_timeout_seconds=_get_int("RENDER_TIMEOUT_SECONDS", 180, min_value=5),
     max_concurrent_renders=_get_int("MAX_CONCURRENT_RENDERS", 2, min_value=1),
     api_key_auth_enabled=_get_bool("API_KEY_AUTH_ENABLED", True),
