@@ -17,9 +17,31 @@ const SLIDE_H_IN = SLIDE_H_PX / DPI; // 11.25
 
 const INPUT_FILE = process.argv[2] || "test.html";
 const OUTPUT_FILE = process.argv[3] || "output.pptx";
+const PAGE_LOAD_TIMEOUT_MS = Number.parseInt(process.env.PAGE_LOAD_TIMEOUT_MS || "30000", 10);
 
 function isHttpUrl(value) {
   return /^https?:\/\//i.test(value || "");
+}
+
+function normalizedOrigin(value) {
+  try {
+    const url = new URL(value);
+    return `${url.protocol.toLowerCase()}//${url.host.toLowerCase()}`;
+  } catch {
+    return null;
+  }
+}
+
+function isAllowedRequestUrl(requestUrl, allowedOrigin) {
+  if (!allowedOrigin) return true;
+  if (
+    requestUrl.startsWith("data:") ||
+    requestUrl.startsWith("blob:") ||
+    requestUrl.startsWith("about:")
+  ) {
+    return true;
+  }
+  return normalizedOrigin(requestUrl) === normalizedOrigin(allowedOrigin);
 }
 
 // ---------------------------------------------------------------------------
@@ -1286,60 +1308,68 @@ async function main() {
   console.log(`Input:  ${inputIsUrl ? INPUT_FILE : inputPath}`);
   console.log(`Output: ${path.resolve(OUTPUT_FILE)}\n`);
 
-  // 1. Launch browser
-  console.log("1. Launching browser...");
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: SLIDE_W_PX, height: SLIDE_H_PX * 20 },
-    deviceScaleFactor: 1,
-  });
-
-  if (allowedOrigin) {
-    await context.route("**/*", async (route) => {
-      const requestUrl = route.request().url();
-      if (
-        requestUrl.startsWith(allowedOrigin) ||
-        requestUrl.startsWith("data:") ||
-        requestUrl.startsWith("blob:") ||
-        requestUrl.startsWith("about:")
-      ) {
-        await route.continue();
-        return;
-      }
-      await route.abort();
+  let browser;
+  let context;
+  let slidesData;
+  try {
+    // 1. Launch browser
+    console.log("1. Launching browser...");
+    browser = await chromium.launch({ headless: true });
+    context = await browser.newContext({
+      viewport: { width: SLIDE_W_PX, height: SLIDE_H_PX * 20 },
+      deviceScaleFactor: 1,
     });
+
+    if (allowedOrigin) {
+      await context.route("**/*", async (route) => {
+        const requestUrl = route.request().url();
+        if (isAllowedRequestUrl(requestUrl, allowedOrigin)) {
+          await route.continue();
+          return;
+        }
+        await route.abort();
+      });
+    }
+
+    const page = await context.newPage();
+
+    console.log("2. Loading HTML...");
+    await page.goto(inputTarget, { waitUntil: "networkidle", timeout: PAGE_LOAD_TIMEOUT_MS });
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        })
+    );
+    await page.waitForTimeout(1500);
+
+    // 2. DOM extraction
+    console.log("3. Extracting DOM layout & styles...");
+    slidesData = await page.evaluate(browserExtractSlides);
+    if (!Array.isArray(slidesData) || slidesData.length === 0) {
+      throw new Error("No slide elements found for selector '.slide'");
+    }
+    console.log(`   Found ${slidesData.length} slides`);
+    slidesData.forEach((s, i) => console.log(`   Slide ${i + 1}: ${s.items.length} items`));
+
+    // 3. Pseudo-elements & bullets
+    console.log("4. Extracting pseudo-elements & bullets...");
+    await extractPseudoElements(page, slidesData);
+    await extractListBullets(page, slidesData);
+
+    // 4. Screenshot captured regions, gradients, conic-gradients
+    console.log("5. Screenshotting complex regions...");
+    await screenshotRegions(page, slidesData);
+  } finally {
+    if (context) {
+      await context.close().catch(() => {});
+    }
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log("   Browser closed.");
+    }
   }
-
-  const page = await context.newPage();
-
-  console.log("2. Loading HTML...");
-  await page.goto(inputTarget, { waitUntil: "networkidle", timeout: 30000 });
-  await page.evaluate(() => document.fonts.ready);
-  await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(resolve));
-      })
-  );
-  await page.waitForTimeout(1500);
-
-  // 2. DOM extraction
-  console.log("3. Extracting DOM layout & styles...");
-  const slidesData = await page.evaluate(browserExtractSlides);
-  console.log(`   Found ${slidesData.length} slides`);
-  slidesData.forEach((s, i) => console.log(`   Slide ${i + 1}: ${s.items.length} items`));
-
-  // 3. Pseudo-elements & bullets
-  console.log("4. Extracting pseudo-elements & bullets...");
-  await extractPseudoElements(page, slidesData);
-  await extractListBullets(page, slidesData);
-
-  // 4. Screenshot captured regions, gradients, conic-gradients
-  console.log("5. Screenshotting complex regions...");
-  await screenshotRegions(page, slidesData);
-
-  await browser.close();
-  console.log("   Browser closed.");
 
   // 5. Generate PPTX
   console.log("6. Generating PowerPoint...");

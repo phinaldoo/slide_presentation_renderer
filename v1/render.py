@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlsplit
 import uuid
 
 from playwright.async_api import async_playwright
@@ -20,7 +21,20 @@ def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> boo
         return True
     if not allowed_origin:
         return True
-    return request_url.startswith(allowed_origin)
+    return _extract_origin(request_url) == _extract_origin(allowed_origin)
+
+
+def _extract_origin(url: str) -> str | None:
+    """Extract normalized origin from URL."""
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return None
+
+    if not parsed.scheme or not parsed.netloc:
+        return None
+
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
 
 
 async def _apply_request_guard(context, allowed_origin: str | None) -> None:
@@ -88,6 +102,7 @@ async def html_to_pptx(
     output_dir: str | Path | None = None,
     selector: str | None = None,
     allowed_origin: str | None = None,
+    page_load_timeout_ms: int = 30_000,
 ) -> Path:
     """Rendert HTML-Slides (Sections) als PPTX-Datei und gibt den Speicherpfad zurück."""
 
@@ -97,16 +112,27 @@ async def html_to_pptx(
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        context = await browser.new_context(viewport={"width": 1920, "height": 1080})
-        await _apply_request_guard(context, allowed_origin)
-        page = await context.new_page()
+        context = None
+        try:
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+            await _apply_request_guard(context, allowed_origin)
+            page = await context.new_page()
+            page.set_default_navigation_timeout(page_load_timeout_ms)
+            page.set_default_timeout(page_load_timeout_ms)
 
-        if html_content and html_content.strip():
-            await page.set_content(html_content, wait_until="networkidle")
+            if html_content and html_content.strip():
+                await page.set_content(
+                    html_content,
+                    wait_until="networkidle",
+                    timeout=page_load_timeout_ms,
+                )
 
-        await page.wait_for_load_state("networkidle")
-        await _render_page_to_pptx(page, prs, selector_to_use)
-        await browser.close()
+            await page.wait_for_load_state("networkidle", timeout=page_load_timeout_ms)
+            await _render_page_to_pptx(page, prs, selector_to_use)
+        finally:
+            if context is not None:
+                await context.close()
+            await browser.close()
 
     return _save_presentation(prs, output_dir)
 
@@ -117,6 +143,7 @@ async def html_url_to_pptx(
     output_dir: str | Path | None = None,
     selector: str | None = None,
     allowed_origin: str | None = None,
+    page_load_timeout_ms: int = 30_000,
 ) -> Path:
     """Lade HTML ueber URL und konvertiere zu PPTX."""
 
@@ -125,13 +152,24 @@ async def html_url_to_pptx(
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        context = await browser.new_context(viewport={"width": 1920, "height": 1080})
-        await _apply_request_guard(context, allowed_origin)
-        page = await context.new_page()
-        await page.goto(html_url, wait_until="networkidle")
-        await page.wait_for_load_state("networkidle")
-        await _render_page_to_pptx(page, prs, selector_to_use)
-        await browser.close()
+        context = None
+        try:
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+            await _apply_request_guard(context, allowed_origin)
+            page = await context.new_page()
+            page.set_default_navigation_timeout(page_load_timeout_ms)
+            page.set_default_timeout(page_load_timeout_ms)
+            await page.goto(
+                html_url,
+                wait_until="networkidle",
+                timeout=page_load_timeout_ms,
+            )
+            await page.wait_for_load_state("networkidle", timeout=page_load_timeout_ms)
+            await _render_page_to_pptx(page, prs, selector_to_use)
+        finally:
+            if context is not None:
+                await context.close()
+            await browser.close()
 
     return _save_presentation(prs, output_dir)
 

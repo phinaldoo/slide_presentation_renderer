@@ -22,13 +22,19 @@ Production-ready Docker deployment for HTML-to-PowerPoint rendering using:
 - API requests without a valid key return `401`.
 - `/docs` and `/openapi.json` are intentionally excluded from API key protection for browser access when docs are enabled.
 - The backend fails startup if `API_KEYS` is empty, duplicated, too short (<16), or left as placeholder values.
+- The backend also fails startup if production guardrails are violated, unless explicitly overridden.
 
 WARNING: exposing `/docs` and `/openapi.json` without authentication is unsafe for production.
 
 - Docs endpoints must only be enabled in non-production environments.
 - `ENABLE_DOCS` controls docs exposure in normal operation.
 - `DEVELOPMENT_MODE` overrides `ENABLE_DOCS`; if `DEVELOPMENT_MODE=true`, docs endpoints are exposed even when `ENABLE_DOCS=false`.
-- There is no built-in environment detector that automatically blocks this in production; use deployment guardrails (below) to prevent accidental enablement.
+- `ENVIRONMENT=production` enforces production guardrails:
+  - `DEVELOPMENT_MODE` must be `false`
+  - `ENABLE_DOCS` must be `false`
+  - `API_KEY_AUTH_ENABLED` must be `true`
+  - `ALLOWED_HOSTS` must not contain `*`
+- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION=true` bypasses those guardrails, but should only be used deliberately.
 
 ### Request JSON
 
@@ -73,7 +79,7 @@ Before first start:
 1. `cp .env.example .env`
 2. Set a real `API_KEYS` value in `.env` (16+ chars, random)
 
-`docker compose up` fails fast with a clear error if `API_KEYS` is missing or empty.
+`docker compose up` fails fast with a clear error if required runtime safeguards are invalid, including missing `API_KEYS`.
 
 ```bash
 docker compose up -d --build
@@ -97,25 +103,34 @@ curl -X POST "http://localhost:8080/api/render" \
 
 - Request validation with strict schema and filename sanitization
 - File size limits (single + total assets + HTML length)
+- Explicit request body size enforcement with `413` protection
 - Temporary per-request isolated render workspace
 - Playwright request guard (renderer can only load local per-request origin + data/blob/about)
+- Startup/readiness validation for auth, config, writable temp storage, Playwright Chromium, and v2 Node dependencies
 - Non-root containers
 - Read-only filesystem with explicit tmpfs mounts
 - Linux capabilities dropped + `no-new-privileges`
-- nginx rate limiting and security headers
+- Docker log rotation
+- nginx rate limiting, connection limiting, and security headers
+- nginx body-size and upstream timeout settings derived from the same env vars as the backend
 
 ## Configurable environment variables
 
 See `.env.example` for defaults:
 
 - `NGINX_PORT`
+- `ENVIRONMENT`
 - `DEVELOPMENT_MODE`
 - `ENABLE_DOCS`
+- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION`
 - `ALLOWED_HOSTS`
 - `API_KEY_AUTH_ENABLED`
 - `API_KEYS`
 - `RENDER_TIMEOUT_SECONDS`
+- `RENDER_QUEUE_TIMEOUT_MS`
+- `PAGE_LOAD_TIMEOUT_MS`
 - `MAX_CONCURRENT_RENDERS`
+- `MAX_REQUEST_BODY_BYTES`
 - `MAX_HTML_CHARS`
 - `MAX_INPUT_FILES`
 - `MAX_ASSET_BYTES`
@@ -126,6 +141,14 @@ WARNING: keep docs disabled in production.
 - `ENABLE_DOCS` should be `false` in production.
 - `DEVELOPMENT_MODE` must be `false` in production.
 - Explicit override behavior: `DEVELOPMENT_MODE=true` enables `/docs` and `/openapi.json` even when `ENABLE_DOCS=false`.
+- `ALLOWED_HOSTS` should be a concrete hostname allowlist in production.
+- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` should remain `false` in production.
+
+## Health endpoints
+
+- `GET /livez`: nginx/backend process liveness
+- `GET /readyz`: full service readiness, including runtime/config checks
+- `GET /healthz`: backward-compatible alias for `/readyz`
 
 ## Docs exposure security trade-offs
 
@@ -143,7 +166,9 @@ Recommended mitigations when docs are needed:
 
 ## Deployment checklist
 
+- Set `ENVIRONMENT=production` in production deployments.
 - Set `DEVELOPMENT_MODE=false` in production.
 - Set `ENABLE_DOCS=false` in production unless there is an approved exception.
-- Add a startup validation routine (for example, `validateEnv` or `startup_checks`) that warns or fails startup if `DEVELOPMENT_MODE=true` is detected in production.
+- Keep `ALLOW_INSECURE_PRODUCTION_CONFIGURATION=false`.
+- Set a concrete `ALLOWED_HOSTS` allowlist.
 - Verify effective runtime values at deploy time (container env, Compose overrides, Helm values, CI/CD variables).

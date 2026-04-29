@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
+
+logger = logging.getLogger("slide_renderer")
+
+_PRODUCTION_ENV_NAMES = {"prod", "production"}
 
 
 def _get_int(name: str, default: int, *, min_value: int) -> int:
@@ -31,29 +36,104 @@ def _get_csv(name: str) -> tuple[str, ...]:
     return tuple(values)
 
 
+def _normalize_environment_name(value: str | None) -> str:
+    normalized = str(value or "").strip().lower()
+    return normalized or "development"
+
+
 @dataclass(frozen=True)
 class Settings:
+    environment_name: str
     development_mode: bool
     enable_docs: bool
+    allow_insecure_production_configuration: bool
     render_timeout_seconds: int
+    render_queue_timeout_ms: int
+    page_load_timeout_ms: int
     max_concurrent_renders: int
     api_key_auth_enabled: bool
     api_keys: tuple[str, ...]
+    allowed_hosts: tuple[str, ...]
+    max_request_body_bytes: int
     max_html_chars: int
     max_input_files: int
     max_asset_bytes: int
     max_total_asset_bytes: int
 
+    @property
+    def docs_enabled(self) -> bool:
+        return self.development_mode or self.enable_docs
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment_name in _PRODUCTION_ENV_NAMES
+
 
 SETTINGS = Settings(
+    environment_name=_normalize_environment_name(os.getenv("ENVIRONMENT")),
     development_mode=_get_bool("DEVELOPMENT_MODE", False),
     enable_docs=_get_bool("ENABLE_DOCS", False),
+    allow_insecure_production_configuration=_get_bool(
+        "ALLOW_INSECURE_PRODUCTION_CONFIGURATION",
+        False,
+    ),
     render_timeout_seconds=_get_int("RENDER_TIMEOUT_SECONDS", 180, min_value=5),
+    render_queue_timeout_ms=_get_int("RENDER_QUEUE_TIMEOUT_MS", 500, min_value=1),
+    page_load_timeout_ms=_get_int("PAGE_LOAD_TIMEOUT_MS", 30_000, min_value=1_000),
     max_concurrent_renders=_get_int("MAX_CONCURRENT_RENDERS", 2, min_value=1),
     api_key_auth_enabled=_get_bool("API_KEY_AUTH_ENABLED", True),
     api_keys=_get_csv("API_KEYS"),
+    allowed_hosts=_get_csv("ALLOWED_HOSTS") or ("*",),
+    max_request_body_bytes=_get_int("MAX_REQUEST_BODY_BYTES", 180_000_000, min_value=1_024),
     max_html_chars=_get_int("MAX_HTML_CHARS", 2_000_000, min_value=1_000),
     max_input_files=_get_int("MAX_INPUT_FILES", 32, min_value=1),
     max_asset_bytes=_get_int("MAX_ASSET_BYTES", 25_000_000, min_value=1_024),
     max_total_asset_bytes=_get_int("MAX_TOTAL_ASSET_BYTES", 120_000_000, min_value=1_024),
 )
+
+
+def validate_runtime_configuration() -> None:
+    """Validate runtime configuration and production guardrails."""
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if SETTINGS.max_total_asset_bytes < SETTINGS.max_asset_bytes:
+        errors.append("MAX_TOTAL_ASSET_BYTES must be greater than or equal to MAX_ASSET_BYTES")
+
+    if SETTINGS.max_request_body_bytes < SETTINGS.max_html_chars:
+        errors.append("MAX_REQUEST_BODY_BYTES must be greater than or equal to MAX_HTML_CHARS")
+
+    if SETTINGS.max_request_body_bytes < SETTINGS.max_total_asset_bytes:
+        errors.append(
+            "MAX_REQUEST_BODY_BYTES must be greater than or equal to MAX_TOTAL_ASSET_BYTES"
+        )
+
+    if SETTINGS.page_load_timeout_ms > SETTINGS.render_timeout_seconds * 1000:
+        errors.append("PAGE_LOAD_TIMEOUT_MS must not exceed RENDER_TIMEOUT_SECONDS * 1000")
+
+    if SETTINGS.render_queue_timeout_ms > SETTINGS.render_timeout_seconds * 1000:
+        errors.append("RENDER_QUEUE_TIMEOUT_MS must not exceed RENDER_TIMEOUT_SECONDS * 1000")
+
+    if SETTINGS.is_production:
+        if SETTINGS.development_mode:
+            warnings.append("DEVELOPMENT_MODE must be false in production")
+        if SETTINGS.enable_docs:
+            warnings.append("ENABLE_DOCS must be false in production")
+        if not SETTINGS.api_key_auth_enabled:
+            warnings.append("API_KEY_AUTH_ENABLED must be true in production")
+        if "*" in SETTINGS.allowed_hosts:
+            warnings.append("ALLOWED_HOSTS must not include '*' in production")
+
+    if errors:
+        raise RuntimeError("; ".join(errors))
+
+    if warnings:
+        message = "; ".join(warnings)
+        if SETTINGS.allow_insecure_production_configuration:
+            logger.warning(
+                "Starting with insecure production configuration because "
+                "ALLOW_INSECURE_PRODUCTION_CONFIGURATION=true: %s",
+                message,
+            )
+            return
+        raise RuntimeError(message)

@@ -6,10 +6,10 @@ server {
     server_name _;
 
     server_tokens off;
-    client_max_body_size 220M;
-    client_body_timeout 60s;
+    client_max_body_size __CLIENT_MAX_BODY_SIZE__;
+    client_body_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
     keepalive_timeout 30s;
-    send_timeout 60s;
+    send_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
@@ -71,8 +71,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Connection "";
         proxy_connect_timeout 5s;
-        proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
+        proxy_send_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
+        proxy_read_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
         proxy_request_buffering on;
         proxy_buffering off;
         add_header Cache-Control "no-store" always;

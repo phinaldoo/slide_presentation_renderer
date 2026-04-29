@@ -41,10 +41,13 @@ def validate_auth_configuration() -> None:
         raise RuntimeError("API key authentication is enabled but API_KEYS is empty")
     if len(set(AUTH_CONFIG.keys)) != len(AUTH_CONFIG.keys):
         raise RuntimeError("API_KEYS contains duplicate values")
-    short_keys = [key for key in AUTH_CONFIG.keys if len(key) < 16]
+    normalized_keys = tuple(key.strip() for key in AUTH_CONFIG.keys)
+    if any(not key for key in normalized_keys):
+        raise RuntimeError("API_KEYS contains empty values")
+    short_keys = [key for key in normalized_keys if len(key) < 16]
     if short_keys:
         raise RuntimeError("all API keys must be at least 16 characters")
-    lower_keys = {key.strip().lower() for key in AUTH_CONFIG.keys}
+    lower_keys = {key.lower() for key in normalized_keys}
     if lower_keys.intersection(_DISALLOWED_DEFAULT_KEYS):
         raise RuntimeError("API_KEYS must not use placeholder/default values")
 
@@ -66,9 +69,9 @@ def is_request_api_key_authorized(request: Request) -> bool:
     if not presented_key:
         return False
 
-    presented_key_normalized = presented_key.lower()
     for expected_key in AUTH_CONFIG.keys:
-        if secrets.compare_digest(presented_key_normalized, expected_key.lower()):
+        normalized_expected_key = expected_key.strip()
+        if secrets.compare_digest(presented_key, normalized_expected_key):
             return True
     return False
 

@@ -44,6 +44,8 @@ If neither is valid, the API returns:
 
 - `DEVELOPMENT_MODE` (default: `false`)
 - `ENABLE_DOCS` (default: `false`; controls whether `/docs` and `/openapi.json` are exposed)
+- `ENVIRONMENT` (default: `development`; set to `production` to enforce production guardrails)
+- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` (default: `false`; bypasses production guardrails)
 - `API_KEY_AUTH_ENABLED` (default: `true`)
 - `API_KEYS` (comma-separated key list, each key >= 16 chars)
 
@@ -56,7 +58,14 @@ Accepted boolean values follow the backend parser behavior:
 - `true` values: `1`, `true`, `yes`, `on` (case-insensitive)
 - any other value (or unset): treated as `false`
 
-Recommended hardening: add a startup/runtime check (for example in `startup_checks` or `validateEnv`) that logs a warning or fails startup when the docs override is active (`DEVELOPMENT_MODE=true` and `ENABLE_DOCS=false`) so operators are alerted.
+When `ENVIRONMENT=production`, the service fails startup unless:
+
+- `DEVELOPMENT_MODE=false`
+- `ENABLE_DOCS=false`
+- `API_KEY_AUTH_ENABLED=true`
+- `ALLOWED_HOSTS` does not contain `*`
+
+`ALLOW_INSECURE_PRODUCTION_CONFIGURATION=true` bypasses those checks, but should only be used intentionally.
 
 When auth is enabled, backend startup fails if keys are missing, duplicated, shorter than 16 chars, or still set to placeholder values.
 
@@ -70,7 +79,15 @@ When auth is enabled, backend startup fails if keys are missing, duplicated, sho
 
 ### `GET /healthz`
 
-Returns service liveness.
+Returns backward-compatible readiness.
+
+### `GET /livez`
+
+Returns process liveness.
+
+### `GET /readyz`
+
+Returns full service readiness, including config, auth, and renderer dependency checks.
 
 **Response**
 
@@ -186,7 +203,9 @@ Validation and operational failures return JSON:
 Configured via environment variables:
 
 - `RENDER_TIMEOUT_SECONDS`
+- `RENDER_QUEUE_TIMEOUT_MS`
 - `MAX_CONCURRENT_RENDERS`
+- `MAX_REQUEST_BODY_BYTES`
 - `MAX_HTML_CHARS`
 - `MAX_INPUT_FILES`
 - `MAX_ASSET_BYTES`

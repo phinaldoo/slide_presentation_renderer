@@ -3,13 +3,18 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import concurrent.futures
 import os
+import subprocess
+import shutil
 import tempfile
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlsplit
 import zipfile
 
 from .config import SETTINGS
@@ -27,6 +32,7 @@ _SUBPROCESS_ENV_KEYS = {
     "PATH",
     "HOME",
     "XDG_CACHE_HOME",
+    "PLAYWRIGHT_BROWSERS_PATH",
     "PYTHONDONTWRITEBYTECODE",
     "PYTHONUNBUFFERED",
 }
@@ -47,6 +53,113 @@ class RenderResult:
     content: bytes
     media_type: str
     slide_count: int
+
+
+def validate_render_environment() -> None:
+    """Validate runtime dependencies required by the render service."""
+    _validate_temporary_storage()
+    _validate_static_runtime_dependencies()
+
+
+def _validate_temporary_storage() -> None:
+    """Validate writable temporary storage used for isolated render workspaces."""
+    issues: list[str] = []
+
+    tmp_dir = Path(tempfile.gettempdir())
+    if not tmp_dir.exists() or not os.access(tmp_dir, os.W_OK | os.X_OK):
+        issues.append(f"temporary directory is not writable: {tmp_dir}")
+
+    if issues:
+        raise RuntimeError("; ".join(issues))
+
+
+@lru_cache(maxsize=1)
+def _validate_static_runtime_dependencies() -> None:
+    """Validate immutable renderer dependencies once per process."""
+    issues: list[str] = []
+
+    if not _V2_SCRIPT_PATH.exists():
+        issues.append(f"v2 renderer script not found: {_V2_SCRIPT_PATH}")
+
+    node_executable = shutil.which("node")
+    if node_executable is None:
+        issues.append("node executable not found in PATH")
+    else:
+        try:
+            _validate_v2_node_dependencies(node_executable)
+        except RuntimeError as exc:
+            issues.append(str(exc))
+
+    try:
+        import v1.render  # noqa: F401
+    except Exception as exc:  # noqa: BLE001
+        issues.append(f"v1 renderer import failed: {exc}")
+    else:
+        try:
+            _validate_playwright_runtime()
+        except RuntimeError as exc:
+            issues.append(str(exc))
+
+    if issues:
+        raise RuntimeError("; ".join(issues))
+
+
+def _validate_v2_node_dependencies(node_executable: str) -> None:
+    """Validate that the Node renderer dependencies are installed and resolvable."""
+    env = _build_subprocess_env()
+    probe = (
+        "require.resolve('playwright');"
+        "require.resolve('pptxgenjs');"
+        "process.stdout.write('ok');"
+    )
+    try:
+        result = subprocess.run(
+            [node_executable, "-e", probe],
+            cwd=str(_V2_WORKDIR),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError(f"v2 renderer dependency check failed: {exc}") from exc
+
+    if result.returncode == 0:
+        return
+
+    details = (result.stderr or result.stdout or "").strip()
+    message = details or "required Node dependencies are missing"
+    raise RuntimeError(f"v2 renderer dependency check failed: {message}")
+
+
+def _validate_playwright_runtime() -> None:
+    """Validate that the Chromium runtime required by Playwright is present."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(f"playwright import failed: {exc}") from exc
+
+    def _probe_playwright_runtime() -> Path:
+        with sync_playwright() as playwright:
+            return Path(playwright.chromium.executable_path)
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="playwright-runtime-check",
+        ) as executor:
+            future = executor.submit(_probe_playwright_runtime)
+            executable_path = future.result(timeout=15)
+    except concurrent.futures.TimeoutError as exc:
+        raise RuntimeError("playwright runtime initialization timed out") from exc
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(f"playwright runtime initialization failed: {exc}") from exc
+
+    if not executable_path.exists():
+        raise RuntimeError(
+            f"playwright chromium executable not found: {executable_path}"
+        )
 
 
 async def render_presentation(request: RenderRequest) -> RenderResult:
@@ -175,13 +288,35 @@ def _decode_base64(content: str) -> bytes:
     return base64.b64decode(payload, validate=True)
 
 
+def _extract_origin(url: str) -> str | None:
+    """Extract normalized origin from URL."""
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return None
+
+    if not parsed.scheme or not parsed.netloc:
+        return None
+
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+
 def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> bool:
     """Check if request URL is allowed based on origin policy."""
     if request_url.startswith(("data:", "blob:", "about:")):
         return True
     if not allowed_origin:
         return True
-    return request_url.startswith(allowed_origin)
+    return _extract_origin(request_url) == _extract_origin(allowed_origin)
+
+
+def _build_subprocess_env() -> dict[str, str]:
+    """Build a minimal environment for subprocess-based renderers."""
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if key in _SUBPROCESS_ENV_KEYS and value
+    }
 
 
 async def _apply_request_guard(context, allowed_origin: str | None) -> None:
@@ -208,12 +343,22 @@ async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin:
 
     async with async_playwright() as p:
         browser = await p.chromium.launch()
+        context = None
         try:
             context = await browser.new_context(viewport={"width": 1920, "height": 1080})
             await _apply_request_guard(context, allowed_origin)
             page = await context.new_page()
-            await page.goto(input_url, wait_until="networkidle")
-            await page.wait_for_load_state("networkidle")
+            page.set_default_navigation_timeout(SETTINGS.page_load_timeout_ms)
+            page.set_default_timeout(SETTINGS.page_load_timeout_ms)
+            await page.goto(
+                input_url,
+                wait_until="networkidle",
+                timeout=SETTINGS.page_load_timeout_ms,
+            )
+            await page.wait_for_load_state(
+                "networkidle",
+                timeout=SETTINGS.page_load_timeout_ms,
+            )
 
             sections = await page.locator(_SLIDE_SELECTOR).all()
             if not sections:
@@ -231,6 +376,8 @@ async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin:
 
             return rendered_paths
         finally:
+            if context is not None:
+                await context.close()
             await browser.close()
 
 
@@ -242,6 +389,7 @@ async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> P
         input_url,
         output_dir=output_dir,
         allowed_origin=allowed_origin,
+        page_load_timeout_ms=SETTINGS.page_load_timeout_ms,
     )
 
 
@@ -251,15 +399,15 @@ async def _render_v2(input_url: str, output_dir: Path, allowed_origin: str) -> P
         raise RenderExecutionError(f"v2 renderer script not found: {_V2_SCRIPT_PATH}")
 
     output_path = output_dir / f"presentation_{uuid.uuid4()}.pptx"
-    env = {
-        key: value
-        for key, value in os.environ.items()
-        if key in _SUBPROCESS_ENV_KEYS and value
-    }
+    node_executable = shutil.which("node")
+    if not node_executable:
+        raise RenderExecutionError("node executable not found in PATH")
+    env = _build_subprocess_env()
     env["ALLOWED_ORIGIN"] = allowed_origin
+    env["PAGE_LOAD_TIMEOUT_MS"] = str(SETTINGS.page_load_timeout_ms)
 
     process = await asyncio.create_subprocess_exec(
-        "node",
+        node_executable,
         str(_V2_SCRIPT_PATH),
         input_url,
         str(output_path),
