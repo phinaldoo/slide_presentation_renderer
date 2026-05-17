@@ -88,6 +88,20 @@ def test_render_endpoint_rejects_client_rendering_version(monkeypatch) -> None:
     assert response.status_code == 422
 
 
+def test_render_endpoint_does_not_register_v1_alias(monkeypatch) -> None:
+    main = _load_main(monkeypatch)
+    monkeypatch.setattr(main, "validate_render_environment", lambda: None)
+
+    with TestClient(main.app) as client:
+        response = client.post(
+            "/api/v1/render",
+            headers={"X-API-Key": "TestRendererSecret123"},
+            json={"html": "<section class='slide'>Hello</section>"},
+        )
+
+    assert response.status_code == 404
+
+
 def test_render_endpoint_rejects_oversized_body(monkeypatch) -> None:
     main = _load_main(monkeypatch)
     monkeypatch.setattr(main, "validate_render_environment", lambda: None)

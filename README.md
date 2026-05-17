@@ -12,7 +12,6 @@ Technical details:
 ### Endpoint
 
 - `POST /api/render`
-- `POST /api/v1/render` (alias)
 
 ### Authentication
 

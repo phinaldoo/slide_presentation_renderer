@@ -183,7 +183,6 @@ async def internal_api_key_auth(request: Request) -> Response:
 
 
 @app.post("/api/render")
-@app.post("/api/v1/render")
 async def render_endpoint(payload: RenderRequest, _: None = Depends(require_api_key)) -> Response:
     """Render presentation HTML to PPTX with slide images."""
     acquired_slot = False
