@@ -7,6 +7,11 @@ Technical details:
 - **nginx reverse proxy**
 - **Playwright renderer**
 
+Why is this a separate service?
+
+- The renderer is based on Playwright, which is a heavy dependency.
+- For performance reasons, it is better to run the renderer in a separate container and scale it independently.
+
 ## API
 
 ### Endpoint
