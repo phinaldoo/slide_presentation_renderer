@@ -2,7 +2,6 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY nginx/renderer.conf.template /opt/renderer/renderer.conf.template
 COPY --chmod=0755 nginx/bin/render-config.sh /docker-entrypoint.d/40-renderer-config.sh
-COPY frontend/ /usr/share/nginx/html/
 
 EXPOSE 8080
 

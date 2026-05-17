@@ -157,6 +157,17 @@ async def livez() -> JSONResponse:
     return JSONResponse({"status": "ok"})
 
 
+@app.get("/")
+async def root() -> JSONResponse:
+    """Service information endpoint."""
+    return JSONResponse(
+        {
+            "message": "Slide Presentation Renderer API",
+            "render_endpoint": "/api/render",
+        }
+    )
+
+
 @app.get("/readyz")
 async def readyz() -> JSONResponse:
     """Readiness check endpoint."""

@@ -4,20 +4,21 @@ Slide Presentation Renderer is a sub-service of the ChatUI project. It is a Dock
 
 Technical details:
 - **FastAPI backend** for request validation/orchestration
-- **nginx frontend server** as reverse proxy/static landing page
+- **nginx reverse proxy**
 - **Playwright renderer**
 
 ## API
 
 ### Endpoint
 
+- `GET /`
 - `POST /api/render`
 
 ### Authentication
 
-- API key is required for all API requests.
+- API key is required for render requests.
 - Provide it via `X-API-Key` (default header) or `Authorization: Bearer <key>`.
-- API requests without a valid key return `401`.
+- Render requests without a valid key return `401`.
 - `/docs` and `/openapi.json` are intentionally excluded from API key protection for browser access when docs are enabled.
 - The backend fails startup if `API_KEYS` is empty, duplicated, too short (<16), or left as placeholder values.
 - The backend also fails startup if production guardrails are violated, unless explicitly overridden.

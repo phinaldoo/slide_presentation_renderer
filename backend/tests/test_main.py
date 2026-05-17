@@ -32,6 +32,21 @@ def test_readyz_returns_ok(monkeypatch) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_root_returns_json_message(monkeypatch) -> None:
+    main = _load_main(monkeypatch)
+    monkeypatch.setattr(main, "validate_render_environment", lambda: None)
+
+    with TestClient(main.app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert response.json() == {
+        "message": "Slide Presentation Renderer API",
+        "render_endpoint": "/api/render",
+    }
+
+
 def test_render_endpoint_requires_api_key(monkeypatch) -> None:
     main = _load_main(monkeypatch)
     monkeypatch.setattr(main, "validate_render_environment", lambda: None)
