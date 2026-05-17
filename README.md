@@ -307,3 +307,7 @@ Important production guardrails:
 - `GET /livez`: nginx/backend process liveness
 - `GET /readyz`: full service readiness, including runtime/config checks
 - `GET /healthz`: backward-compatible alias for `/readyz`
+
+## License
+
+This app is licensed under the Apache License 2.0. See `LICENSE`.
