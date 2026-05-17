@@ -17,7 +17,7 @@ endif
 
 help:
 	@echo "Available targets:"
-	@echo "  setup         Prepare .env, certs directory, and required secrets"
+	@echo "  setup         Prepare .env and required secrets"
 	@echo "  up            Start the stack in background"
 	@echo "  down          Stop and remove containers"
 	@echo "  restart       Restart all services"

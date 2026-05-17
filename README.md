@@ -7,6 +7,8 @@ Technical details:
 - **nginx reverse proxy**
 - **Playwright renderer**
 
+**Note:** Currently it only supports rendering to uneditable PowerPoint files. In the near future, it will support rendering to editable PowerPoint files.
+
 Why is this a separate service and not part of the main ChatUI service?
 
 - The renderer is based on Playwright, which is a heavy dependency.
@@ -55,17 +57,11 @@ docker compose version
 Use this path if `make` is installed. On macOS/Linux, `make setup` uses `setup.sh`; on Windows, it uses `setup.ps1`.
 
 ```bash
-# Prepare .env, create ./certs, and generate API_KEYS if needed
+# Prepare .env and generate API_KEYS if needed
 make setup
 
 # Build and start the renderer stack in the background
 make up
-
-# Check container status
-make ps
-
-# Follow logs
-make logs
 ```
 
 The service is available at:
@@ -88,7 +84,7 @@ make ps       # Show container status
 Use this path if you do not have `make` installed or prefer plain shell commands.
 
 ```bash
-# Prepare .env, create ./certs, and generate API_KEYS if needed
+# Prepare .env and generate API_KEYS if needed
 bash ./setup.sh
 
 # Build and start the renderer stack in the background
@@ -121,7 +117,7 @@ docker compose -f docker-compose.yml ps
 Use this path for native Windows setup.
 
 ```powershell
-# Prepare .env, create .\certs, and generate API_KEYS if needed
+# Prepare .env and generate API_KEYS if needed
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 
 # Build and start the renderer stack in the background
@@ -155,7 +151,6 @@ docker compose -f docker-compose.yml ps
 
 - Create `.env` from `.env.example` if it does not exist.
 - Add any new keys from `.env.example` into an existing `.env`.
-- Create the `./certs/` directory.
 - Generate a secure `API_KEYS` value when one is missing or unsafe.
 
 After setup, review `.env` if you want to change the port, HTTPS settings, docs exposure, or production hardening.
@@ -185,58 +180,6 @@ Windows PowerShell:
 ```powershell
 docker compose -f docker-compose.yml restart
 ```
-
-### Testing a Render Request
-
-Create a small request file:
-
-macOS/Linux or Windows with WSL/Git Bash:
-
-```bash
-cat > request.json <<'JSON'
-{
-  "html": "<section class='slide'><h1>Hello from the renderer</h1></section>"
-}
-JSON
-```
-
-Windows PowerShell:
-
-```powershell
-@'
-{
-  "html": "<section class='slide'><h1>Hello from the renderer</h1></section>"
-}
-'@ | Set-Content -Path request.json
-```
-
-Send it to the service. Use the first key from `.env` as the API key.
-
-macOS/Linux or Windows with WSL/Git Bash:
-
-```bash
-API_KEY="$(grep '^API_KEYS=' .env | cut -d= -f2 | cut -d, -f1)"
-
-curl -X POST "http://localhost:8080/api/render" \
-  -H "X-API-Key: ${API_KEY}" \
-  -H "Content-Type: application/json" \
-  --data-binary @request.json \
-  --output presentation_bundle.zip
-```
-
-Windows PowerShell:
-
-```powershell
-$ApiKey = ((Select-String -Path .env -Pattern '^API_KEYS=').Line -replace '^API_KEYS=', '').Split(',')[0]
-
-curl.exe -X POST "http://localhost:8080/api/render" `
-  -H "X-API-Key: $ApiKey" `
-  -H "Content-Type: application/json" `
-  --data-binary "@request.json" `
-  --output presentation_bundle.zip
-```
-
-If the request succeeds, `presentation_bundle.zip` contains the generated PowerPoint file and slide images.
 
 ## Security
 
@@ -289,7 +232,6 @@ WARNING: exposing `/docs` and `/openapi.json` without authentication is unsafe f
 
 Notes:
 
-- The renderer always uses the stable `v1` pipeline.
 - `input_files` is optional. Files are saved for the render as `/assets/<file_name>`.
 - Each file object must use `base64_content`.
 
@@ -312,59 +254,47 @@ ZIP structure:
 
 ## HTTPS
 
+- The `./certs/` directory is included in the repository for optional HTTPS certificate files.
 - Put your certificate files in `./certs/`.
 - The default expected filenames are `./certs/fullchain.pem` and `./certs/privkey.pem`.
 - Set `FRONTEND_USE_HTTPS=true` in `.env` to serve HTTPS on `NGINX_PORT`.
 - The nginx container reads those files at `/certs/fullchain.pem` and `/certs/privkey.pem`.
 
-## Security hardening included
-
-- Request validation with strict schema and filename sanitization
-- File size limits (single + total assets + HTML length)
-- Explicit request body size enforcement with `413` protection
-- Temporary per-request isolated render workspace
-- Playwright request guard (renderer can only load local per-request origin + data/blob/about)
-- Startup/readiness validation for auth, config, writable temp storage, and Playwright Chromium
-- Non-root containers
-- Read-only filesystem with explicit tmpfs mounts
-- Linux capabilities dropped + `no-new-privileges`
-- Docker log rotation
-- nginx rate limiting, connection limiting, and security headers
-- nginx body-size and upstream timeout settings derived from the same env vars as the backend
-
 ## Configurable environment variables
 
-See `.env.example` for defaults:
+See `.env.example` for the source defaults. `setup.sh` and `setup.ps1` create `.env` from that file and generate `API_KEYS` when needed.
 
-- `NGINX_PORT`
-- `FRONTEND_USE_HTTPS`
-- `FRONTEND_SSL_CERT_PATH`
-- `FRONTEND_SSL_KEY_PATH`
-- `FRONTEND_SSL_CHAIN_PATH`
-- `ENVIRONMENT`
-- `DEVELOPMENT_MODE`
-- `ENABLE_DOCS`
-- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION`
-- `ALLOWED_HOSTS`
-- `API_KEY_AUTH_ENABLED`
-- `API_KEYS`
-- `RENDER_TIMEOUT_SECONDS`
-- `RENDER_QUEUE_TIMEOUT_MS`
-- `PAGE_LOAD_TIMEOUT_MS`
-- `MAX_CONCURRENT_RENDERS`
-- `MAX_REQUEST_BODY_BYTES`
-- `MAX_HTML_CHARS`
-- `MAX_INPUT_FILES`
-- `MAX_ASSET_BYTES`
-- `MAX_TOTAL_ASSET_BYTES`
+| Variable | Default | Description | Best practices |
+| --- | --- | --- | --- |
+| `ENVIRONMENT` | `development` | Deployment environment name. Production guardrails are enforced when this is `production` or `prod`. | Use `development` locally, `staging` for pre-production, and `production` for live deployments. |
+| `NGINX_PORT` | `8080` | Public host port exposed by the nginx reverse proxy. | Keep `8080` locally unless it conflicts. In production, put the service behind a reverse proxy or load balancer and expose only the required port. |
+| `FRONTEND_USE_HTTPS` | `false` | Enables HTTPS in the nginx container using certificate files mounted from `./certs`. | Keep `false` locally unless you need HTTPS testing. Use `true` in production only when valid cert and key files are mounted. |
+| `FRONTEND_SSL_CERT_PATH` | `/certs/fullchain.pem` | Certificate file path inside the nginx container. | Keep the default when using `./certs/fullchain.pem`. Change only if your mounted certificate path differs. |
+| `FRONTEND_SSL_KEY_PATH` | `/certs/privkey.pem` | Private key file path inside the nginx container. | Keep the default when using `./certs/privkey.pem`. Protect this file and never commit real private keys. |
+| `FRONTEND_SSL_CHAIN_PATH` | empty | Optional CA or intermediate chain path used by nginx `ssl_trusted_certificate`. | Leave empty unless your certificate provider requires a separate trusted chain file. |
+| `DEVELOPMENT_MODE` | `false` | Enables development behavior, including docs exposure. | Keep `false` by default. Never enable this in production. |
+| `ENABLE_DOCS` | `false` | Controls FastAPI `/docs` and `/openapi.json` exposure when not overridden by `DEVELOPMENT_MODE`. | Keep `false` in production. Enable only for local debugging or restricted non-production environments. |
+| `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` | `false` | Allows startup even when production guardrails detect unsafe settings. | Keep `false`. Set `true` only for a deliberate temporary exception that has been reviewed. |
+| `ALLOWED_HOSTS` | `*` | Trusted host allowlist for FastAPI host validation. Supports comma-separated hostnames. | `*` is fine for local development. In production, use explicit hostnames such as `renderer.example.com`. |
+| `API_KEY_AUTH_ENABLED` | `true` | Enables API key authentication for render requests. | Keep `true` in production and shared environments. Disable only for isolated local debugging. |
+| `API_KEYS` | empty | Comma-separated API keys accepted by the backend. All keys must be at least 16 characters. | Let setup generate a strong local key. In production, use long random secrets, rotate by temporarily listing old and new keys, and store them outside source control. |
+| `RENDER_TIMEOUT_SECONDS` | `180` | Maximum time allowed for one render request. | Keep high enough for complex slide decks. Lower it if you need stricter resource protection. |
+| `RENDER_QUEUE_TIMEOUT_MS` | `500` | Maximum time a request waits for an available render slot before returning `429`. | Keep low for fast backpressure. Increase only if clients should wait instead of retrying. |
+| `PAGE_LOAD_TIMEOUT_MS` | `30000` | Playwright page navigation and load timeout in milliseconds. | Keep below `RENDER_TIMEOUT_SECONDS * 1000`. Increase for heavy HTML, slow assets, or complex client-side rendering. |
+| `MAX_CONCURRENT_RENDERS` | `2` | Maximum number of render jobs that can run at the same time. | Tune based on CPU and memory. Start small; Playwright is resource-heavy. |
+| `MAX_REQUEST_BODY_BYTES` | `180000000` | Maximum accepted HTTP request body size in bytes. | Set to the smallest value that fits expected decks and assets. Must be at least `MAX_HTML_CHARS` and `MAX_TOTAL_ASSET_BYTES`. |
+| `MAX_HTML_CHARS` | `2000000` | Maximum number of characters accepted in the `html` request field. | Keep bounded to prevent oversized render inputs. Increase only for known large deck workloads. |
+| `MAX_INPUT_FILES` | `32` | Maximum number of files accepted in `input_files`. | Keep low unless decks genuinely need many assets. Raising this also increases validation and storage pressure. |
+| `MAX_ASSET_BYTES` | `25000000` | Maximum decoded size for one uploaded asset. | Keep below `MAX_TOTAL_ASSET_BYTES`. Use compressed images where possible. |
+| `MAX_TOTAL_ASSET_BYTES` | `120000000` | Maximum decoded size of all uploaded assets combined. | Keep below `MAX_REQUEST_BODY_BYTES`. Size it for expected deck assets while leaving room for HTML and request overhead. |
 
-WARNING: keep docs disabled in production.
+Important production guardrails:
 
-- `ENABLE_DOCS` should be `false` in production.
-- `DEVELOPMENT_MODE` must be `false` in production.
-- Explicit override behavior: `DEVELOPMENT_MODE=true` enables `/docs` and `/openapi.json` even when `ENABLE_DOCS=false`.
-- `ALLOWED_HOSTS` should be a concrete hostname allowlist in production.
-- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` should remain `false` in production.
+- `DEVELOPMENT_MODE` must be `false`.
+- `ENABLE_DOCS` must be `false`.
+- `API_KEY_AUTH_ENABLED` must be `true`.
+- `ALLOWED_HOSTS` must not contain `*`.
+- `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` should remain `false`.
 
 ## Health endpoints
 

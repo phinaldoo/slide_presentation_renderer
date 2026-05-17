@@ -6,8 +6,6 @@ TARGET_ENV=".env"
 
 printf 'Setting up slide presentation renderer configuration...\n\n'
 
-mkdir -p certs
-
 generate_api_key() {
   local python_cmd
   local api_key

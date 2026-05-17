@@ -6,8 +6,6 @@ $TargetEnv = ".env"
 Write-Host "Setting up slide presentation renderer configuration..."
 Write-Host ""
 
-New-Item -ItemType Directory -Force -Path "certs" | Out-Null
-
 function New-ApiKey {
     $bytes = New-Object byte[] 48
     $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
