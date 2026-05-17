@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump type
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref_name == 'main' || github.ref_name == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Bump version files
+        id: bump
+        run: |
+          python .github/scripts/bump_version.py "${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate bumped files
+        run: |
+          python -m compileall -q backend/app
+          python - <<'PY'
+          import json
+          import pathlib
+          import re
+
+          root = pathlib.Path.cwd()
+          payload = json.loads((root / "backend/app/version.json").read_text(encoding="utf-8"))
+          version = payload.get("version")
+          tag = payload.get("tag")
+          if not isinstance(version, str) or not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
+            raise SystemExit(f"Invalid version payload: {payload}")
+          if tag != f"v{version}":
+            raise SystemExit(f"Version tag mismatch: {payload}")
+          print(f"Validated version {version}")
+          PY
+
+      - name: Commit and tag release
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/app/version.json
+          git commit -m "release: v${{ steps.bump.outputs.version }}"
+          git tag -a "v${{ steps.bump.outputs.version }}" -m "v${{ steps.bump.outputs.version }}"
+          git push origin HEAD --follow-tags
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.bump.outputs.tag }}" \
+            --verify-tag \
+            --title "${{ steps.bump.outputs.tag }}" \
+            --generate-notes

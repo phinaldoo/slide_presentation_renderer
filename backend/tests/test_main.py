@@ -43,7 +43,32 @@ def test_root_returns_json_message(monkeypatch) -> None:
     assert response.headers["content-type"] == "application/json"
     assert response.json() == {
         "message": "Slide Presentation Renderer API",
+        "version": "v0.9.0",
         "render_endpoint": "/api/render",
+        "version_endpoint": "/version",
+    }
+
+
+def test_version_endpoint_returns_renderer_metadata(monkeypatch) -> None:
+    main = _load_main(monkeypatch)
+    monkeypatch.setattr(main, "validate_render_environment", lambda: None)
+
+    with TestClient(main.app) as client:
+        response = client.get("/version")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "version": "0.9.0",
+        "tag": "v0.9.0",
+        "api_contract_version": 1,
+        "beta": False,
+        "active_rendering_version": "v1",
+        "default_rendering_version": "v1",
+        "supported_rendering_versions": ["v1"],
+        "available_rendering_versions": ["v1"],
+        "features": {
+            "renderer_version_headers": True,
+        },
     }
 
 
@@ -85,6 +110,8 @@ def test_render_endpoint_returns_archive_headers(monkeypatch) -> None:
     assert response.content == b"zip-bytes"
     assert response.headers["content-type"] == "application/zip"
     assert response.headers["x-rendering-version"] == "v1"
+    assert response.headers["x-renderer-version"] == "0.9.0"
+    assert response.headers["x-renderer-version-tag"] == "v0.9.0"
     assert response.headers["x-slide-count"] == "3"
     assert "presentation_v1_20260428T120000Z.zip" in response.headers["content-disposition"]
 

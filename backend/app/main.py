@@ -20,6 +20,7 @@ from .render_service import (
     render_presentation,
     validate_render_environment,
 )
+from .version import APP_VERSION, APP_VERSION_TAG, get_version_payload
 
 logger = logging.getLogger("slide_renderer")
 _API_PATH_PREFIX: Final[str] = "/api/"
@@ -137,7 +138,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title="Slide Presentation Renderer API",
-    version="1.0.0",
+    version=APP_VERSION,
     docs_url="/docs" if _docs_enabled() else None,
     redoc_url=None,
     openapi_url="/openapi.json" if _docs_enabled() else None,
@@ -163,9 +164,17 @@ async def root() -> JSONResponse:
     return JSONResponse(
         {
             "message": "Slide Presentation Renderer API",
+            "version": APP_VERSION_TAG,
             "render_endpoint": "/api/render",
+            "version_endpoint": "/version",
         }
     )
+
+
+@app.get("/version")
+async def version() -> JSONResponse:
+    """Application and renderer contract version endpoint."""
+    return JSONResponse(get_version_payload())
 
 
 @app.get("/readyz")
@@ -230,6 +239,8 @@ async def render_endpoint(payload: RenderRequest, _: None = Depends(require_api_
     headers = {
         "Content-Disposition": f'attachment; filename="{result.file_name}"',
         "X-Rendering-Version": result.rendering_version.value,
+        "X-Renderer-Version": APP_VERSION,
+        "X-Renderer-Version-Tag": APP_VERSION_TAG,
         "X-Slide-Count": str(result.slide_count),
     }
     return Response(content=result.content, media_type=result.media_type, headers=headers)

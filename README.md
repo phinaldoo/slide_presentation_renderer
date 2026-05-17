@@ -17,6 +17,7 @@ Why is this a separate service?
 ### Endpoint
 
 - `GET /`
+- `GET /version`
 - `POST /api/render`
 
 ### Authentication
@@ -66,6 +67,8 @@ Notes:
 - Body is binary `application/zip`
 - `Content-Disposition` includes suggested `.zip` filename
 - `X-Rendering-Version` returns the used renderer
+- `X-Renderer-Version` returns the renderer app version
+- `X-Renderer-Version-Tag` returns the renderer app version tag
 - `X-Slide-Count` returns number of generated slide PNG files
 
 ZIP structure:

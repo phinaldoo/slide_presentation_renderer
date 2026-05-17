@@ -7,6 +7,7 @@ import sys
 RENDERER_MODULES = [
     "backend.app.config",
     "backend.app.auth",
+    "backend.app.version",
     "backend.app.render_service",
     "backend.app.main",
 ]
