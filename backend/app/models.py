@@ -10,7 +10,6 @@ _SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 class RenderingVersion(str, Enum):
     v1 = "v1"
-    v2 = "v2"
 
 
 class InputFile(BaseModel):
@@ -43,7 +42,6 @@ class RenderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     html: str = Field(..., min_length=1)
-    rendering_version: RenderingVersion = RenderingVersion.v1
     input_files: list[InputFile] = Field(default_factory=list)
 
     @model_validator(mode="after")

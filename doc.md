@@ -120,7 +120,6 @@ Alias of `/api/render` with the same behavior.
 ```json
 {
   "html": "<section class='slide'>Hello</section>",
-  "rendering_version": "v1",
   "input_files": [
     {
       "file_name": "logo.png",
@@ -135,8 +134,10 @@ Alias of `/api/render` with the same behavior.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `html` | string | yes | Full HTML document/fragment containing renderable slides |
-| `rendering_version` | string enum | no | `v1` (default) or `v2` |
 | `input_files` | array | no | Optional files injected into renderer workspace |
+
+The renderer always uses the stable `v1` pipeline. Client requests must not
+include a `rendering_version` field.
 
 #### `input_files[]` object
 
@@ -165,7 +166,7 @@ Your HTML can reference those files directly, e.g.:
 - `200 OK`
 - `Content-Type: application/zip`
 - `Content-Disposition: attachment; filename="presentation_<version>_<timestamp>.zip"`
-- `X-Rendering-Version: v1|v2`
+- `X-Rendering-Version: v1`
 - `X-Slide-Count: <number of generated slide PNG files>`
 - Body: binary `.zip` with structure:
   - `presentation_<version>_<timestamp>.pptx`
@@ -240,10 +241,9 @@ curl -X POST "http://localhost:8080/api/render" \
   -H "Authorization: Bearer ${API_KEY}" \
   -H "Content-Type: application/json" \
   --data '{
-    "html": "<section class=\"slide\">Hello</section>",
-    "rendering_version": "v2"
+    "html": "<section class=\"slide\">Hello</section>"
   }' \
-  --output presentation-v2.zip
+  --output presentation.zip
 ```
 
 ## 6.3 Render with external base64 request file
@@ -253,7 +253,6 @@ curl -X POST "http://localhost:8080/api/render" \
 ```json
 {
   "html": "<section class='slide'><img src='/assets/logo.png' /></section>",
-  "rendering_version": "v1",
   "input_files": [
     {
       "file_name": "logo.png",

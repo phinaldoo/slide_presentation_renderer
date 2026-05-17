@@ -65,13 +65,11 @@
         <p>Request payload fields:</p>
         <ul>
           <li><code>html</code> (required)</li>
-          <li><code>rendering_version</code> (optional, <code>v1</code> default, or <code>v2</code>)</li>
           <li><code>input_files</code> (optional list of <code>{"file_name","base64_content"}</code>)</li>
         </ul>
         <p>Example:</p>
         <pre>{
   "html": "&lt;div class='slide'&gt;Hello&lt;/div&gt;",
-  "rendering_version": "v1",
   "input_files": [
     {
       "file_name": "logo.png",

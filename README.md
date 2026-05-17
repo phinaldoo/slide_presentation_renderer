@@ -4,9 +4,7 @@ Production-ready Docker deployment for HTML-to-PowerPoint rendering using:
 
 - **FastAPI backend** for request validation/orchestration
 - **nginx frontend server** as reverse proxy/static landing page
-- **Playwright renderer** with two versions:
-  - `v1` (stable default)
-  - `v2` (beta)
+- **Playwright renderer** using the stable `v1` pipeline
 
 ## API
 
@@ -41,7 +39,6 @@ WARNING: exposing `/docs` and `/openapi.json` without authentication is unsafe f
 ```json
 {
   "html": "<section class='slide'>Hello</section>",
-  "rendering_version": "v1",
   "input_files": [
     {
       "file_name": "image.png",
@@ -53,7 +50,7 @@ WARNING: exposing `/docs` and `/openapi.json` without authentication is unsafe f
 
 Notes:
 
-- `rendering_version` is optional. If omitted, `v1` is used.
+- The renderer always uses the stable `v1` pipeline.
 - `input_files` is optional. Files are saved for the render as `/assets/<file_name>`.
 - Each file object accepts either `base64_content` or `base64`.
 
@@ -106,7 +103,7 @@ curl -X POST "http://localhost:8080/api/render" \
 - Explicit request body size enforcement with `413` protection
 - Temporary per-request isolated render workspace
 - Playwright request guard (renderer can only load local per-request origin + data/blob/about)
-- Startup/readiness validation for auth, config, writable temp storage, Playwright Chromium, and v2 Node dependencies
+- Startup/readiness validation for auth, config, writable temp storage, and Playwright Chromium
 - Non-root containers
 - Read-only filesystem with explicit tmpfs mounts
 - Linux capabilities dropped + `no-new-privileges`
