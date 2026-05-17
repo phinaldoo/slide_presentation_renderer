@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from enum import Enum
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 _SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
@@ -20,7 +20,6 @@ class InputFile(BaseModel):
         ...,
         min_length=1,
         max_length=35_000_000,
-        validation_alias=AliasChoices("base64_content", "base64"),
     )
 
     @field_validator("file_name")

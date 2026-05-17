@@ -52,7 +52,7 @@ Notes:
 
 - The renderer always uses the stable `v1` pipeline.
 - `input_files` is optional. Files are saved for the render as `/assets/<file_name>`.
-- Each file object accepts either `base64_content` or `base64`.
+- Each file object must use `base64_content`.
 
 ### Response
 

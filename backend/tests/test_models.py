@@ -11,6 +11,11 @@ def test_input_file_rejects_path_traversal() -> None:
         InputFile(file_name="../secret.png", base64_content="aGVsbG8=")
 
 
+def test_input_file_rejects_base64_alias() -> None:
+    with pytest.raises(ValidationError, match="base64_content"):
+        InputFile(file_name="logo.png", base64="aGVsbG8=")
+
+
 def test_render_request_rejects_duplicate_input_filenames() -> None:
     with pytest.raises(ValueError, match="duplicate input file name"):
         RenderRequest(
