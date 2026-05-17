@@ -4,7 +4,7 @@ Production-ready Docker deployment for HTML-to-PowerPoint rendering using:
 
 - **FastAPI backend** for request validation/orchestration
 - **nginx frontend server** as reverse proxy/static landing page
-- **Playwright renderer** using the stable `v1` pipeline
+- **Playwright renderer**
 
 ## API
 
@@ -146,26 +146,3 @@ WARNING: keep docs disabled in production.
 - `GET /livez`: nginx/backend process liveness
 - `GET /readyz`: full service readiness, including runtime/config checks
 - `GET /healthz`: backward-compatible alias for `/readyz`
-
-## Docs exposure security trade-offs
-
-Enabling docs endpoints improves developer UX, but it also increases information disclosure risk:
-
-- Exposes your API surface area and available endpoints.
-- Exposes request/response schemas and field names.
-- Makes endpoint discovery and probing easier for attackers.
-
-Recommended mitigations when docs are needed:
-
-- Restrict docs access by source IP (VPN/corporate CIDR allowlist).
-- Protect docs with authentication at the proxy or gateway layer.
-- Feature-flag docs and only enable them temporarily for specific environments.
-
-## Deployment checklist
-
-- Set `ENVIRONMENT=production` in production deployments.
-- Set `DEVELOPMENT_MODE=false` in production.
-- Set `ENABLE_DOCS=false` in production unless there is an approved exception.
-- Keep `ALLOW_INSECURE_PRODUCTION_CONFIGURATION=false`.
-- Set a concrete `ALLOWED_HOSTS` allowlist.
-- Verify effective runtime values at deploy time (container env, Compose overrides, Helm values, CI/CD variables).
