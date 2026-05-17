@@ -67,6 +67,9 @@
           <li><code>html</code> (required)</li>
           <li><code>input_files</code> (optional list of <code>{"file_name","base64_content"}</code>)</li>
         </ul>
+        <p>
+          The renderer engine is selected by the server. Set <code>BETA=true</code> to use <code>v2</code>; otherwise the service uses <code>v1</code>.
+        </p>
         <p>Example:</p>
         <pre>{
   "html": "&lt;div class='slide'&gt;Hello&lt;/div&gt;",

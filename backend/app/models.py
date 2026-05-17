@@ -10,6 +10,7 @@ _SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 class RenderingVersion(str, Enum):
     v1 = "v1"
+    v2 = "v2"
 
 
 class InputFile(BaseModel):

@@ -59,6 +59,7 @@ class Settings:
     max_input_files: int
     max_asset_bytes: int
     max_total_asset_bytes: int
+    beta: bool
 
     @property
     def docs_enabled(self) -> bool:
@@ -67,6 +68,10 @@ class Settings:
     @property
     def is_production(self) -> bool:
         return self.environment_name in _PRODUCTION_ENV_NAMES
+
+    @property
+    def active_rendering_version(self) -> str:
+        return "v2" if self.beta else "v1"
 
 
 SETTINGS = Settings(
@@ -89,6 +94,7 @@ SETTINGS = Settings(
     max_input_files=_get_int("MAX_INPUT_FILES", 32, min_value=1),
     max_asset_bytes=_get_int("MAX_ASSET_BYTES", 25_000_000, min_value=1_024),
     max_total_asset_bytes=_get_int("MAX_TOTAL_ASSET_BYTES", 120_000_000, min_value=1_024),
+    beta=_get_bool("BETA", False),
 )
 
 

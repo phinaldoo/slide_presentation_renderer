@@ -69,5 +69,6 @@ load_env_key_if_unset() {
 load_env_key_if_unset "API_KEYS"
 load_env_key_if_unset "DEVELOPMENT_MODE"
 load_env_key_if_unset "ENABLE_DOCS"
+load_env_key_if_unset "BETA"
 
 exec "$@"

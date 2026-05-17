@@ -5,7 +5,10 @@ import base64
 import binascii
 import concurrent.futures
 import os
+import subprocess
+import shutil
 import tempfile
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -21,6 +24,18 @@ from .models import RenderRequest, RenderingVersion
 ZIP_MIME_TYPE = "application/zip"
 
 _SLIDE_SELECTOR = ".slide"
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_V2_SCRIPT_PATH = _PROJECT_ROOT / "v2" / "index.js"
+_V2_WORKDIR = _PROJECT_ROOT / "v2"
+_SUBPROCESS_ENV_KEYS = {
+    "PATH",
+    "HOME",
+    "XDG_CACHE_HOME",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "PYTHONUNBUFFERED",
+}
 
 
 class RenderValidationError(ValueError):
@@ -62,19 +77,63 @@ def _validate_temporary_storage() -> None:
 def _validate_static_runtime_dependencies() -> None:
     """Validate immutable renderer dependencies once per process."""
     issues: list[str] = []
+    active_rendering_version = RenderingVersion(SETTINGS.active_rendering_version)
+
+    if active_rendering_version == RenderingVersion.v2:
+        if not _V2_SCRIPT_PATH.exists():
+            issues.append(f"v2 renderer script not found: {_V2_SCRIPT_PATH}")
+
+        node_executable = shutil.which("node")
+        if node_executable is None:
+            issues.append("node executable not found in PATH")
+        else:
+            try:
+                _validate_v2_node_dependencies(node_executable)
+            except RuntimeError as exc:
+                issues.append(str(exc))
+
+    if active_rendering_version == RenderingVersion.v1:
+        try:
+            import v1.render  # noqa: F401
+        except Exception as exc:  # noqa: BLE001
+            issues.append(f"v1 renderer import failed: {exc}")
 
     try:
-        import v1.render  # noqa: F401
-    except Exception as exc:  # noqa: BLE001
-        issues.append(f"v1 renderer import failed: {exc}")
-    else:
-        try:
-            _validate_playwright_runtime()
-        except RuntimeError as exc:
-            issues.append(str(exc))
+        _validate_playwright_runtime()
+    except RuntimeError as exc:
+        issues.append(str(exc))
 
     if issues:
         raise RuntimeError("; ".join(issues))
+
+
+def _validate_v2_node_dependencies(node_executable: str) -> None:
+    """Validate that the Node renderer dependencies are installed and resolvable."""
+    env = _build_subprocess_env()
+    probe = (
+        "require.resolve('playwright');"
+        "require.resolve('pptxgenjs');"
+        "process.stdout.write('ok');"
+    )
+    try:
+        result = subprocess.run(
+            [node_executable, "-e", probe],
+            cwd=str(_V2_WORKDIR),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise RuntimeError(f"v2 renderer dependency check failed: {exc}") from exc
+
+    if result.returncode == 0:
+        return
+
+    details = (result.stderr or result.stdout or "").strip()
+    message = details or "required Node dependencies are missing"
+    raise RuntimeError(f"v2 renderer dependency check failed: {message}")
 
 
 def _validate_playwright_runtime() -> None:
@@ -108,6 +167,8 @@ def _validate_playwright_runtime() -> None:
 
 async def render_presentation(request: RenderRequest) -> RenderResult:
     """Render presentation HTML to PPTX with slide images."""
+    rendering_version = RenderingVersion(SETTINGS.active_rendering_version)
+
     if len(request.html) > SETTINGS.max_html_chars:
         raise RenderValidationError(
             f"html is too large (>{SETTINGS.max_html_chars} characters)"
@@ -133,7 +194,11 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
             input_url = f"{server.base_url}/index.html"
             allowed_origin = server.base_url
 
-            render_pptx_coroutine = _render_v1(input_url, output_dir, allowed_origin)
+            if rendering_version == RenderingVersion.v1:
+                render_pptx_coroutine = _render_v1(input_url, output_dir, allowed_origin)
+            else:
+                render_pptx_coroutine = _render_v2(input_url, output_dir, allowed_origin)
+
             pptx_task = asyncio.create_task(render_pptx_coroutine)
             slide_images_task = asyncio.create_task(
                 _render_slide_images(input_url, output_dir, allowed_origin)
@@ -158,7 +223,7 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
 
         pptx_content = output_path.read_bytes()
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        base_name = f"presentation_{RenderingVersion.v1.value}_{timestamp}"
+        base_name = f"presentation_{rendering_version.value}_{timestamp}"
         pptx_file_name = f"{base_name}.pptx"
         archive_file_name = f"{base_name}.zip"
 
@@ -170,7 +235,7 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
 
     return RenderResult(
         file_name=archive_file_name,
-        rendering_version=RenderingVersion.v1,
+        rendering_version=rendering_version,
         content=archive_content,
         media_type=ZIP_MIME_TYPE,
         slide_count=len(slide_image_paths),
@@ -250,6 +315,15 @@ def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> boo
     return _extract_origin(request_url) == _extract_origin(allowed_origin)
 
 
+def _build_subprocess_env() -> dict[str, str]:
+    """Build a minimal environment for subprocess-based renderers."""
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if key in _SUBPROCESS_ENV_KEYS and value
+    }
+
+
 async def _apply_request_guard(context, allowed_origin: str | None) -> None:
     """Apply request guard to block disallowed origins."""
     if not allowed_origin:
@@ -322,3 +396,42 @@ async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> P
         allowed_origin=allowed_origin,
         page_load_timeout_ms=SETTINGS.page_load_timeout_ms,
     )
+
+
+async def _render_v2(input_url: str, output_dir: Path, allowed_origin: str) -> Path:
+    """Render presentation using v2 Node.js renderer."""
+    if not _V2_SCRIPT_PATH.exists():
+        raise RenderExecutionError(f"v2 renderer script not found: {_V2_SCRIPT_PATH}")
+
+    output_path = output_dir / f"presentation_{uuid.uuid4()}.pptx"
+    node_executable = shutil.which("node")
+    if not node_executable:
+        raise RenderExecutionError("node executable not found in PATH")
+    env = _build_subprocess_env()
+    env["ALLOWED_ORIGIN"] = allowed_origin
+    env["PAGE_LOAD_TIMEOUT_MS"] = str(SETTINGS.page_load_timeout_ms)
+
+    process = await asyncio.create_subprocess_exec(
+        node_executable,
+        str(_V2_SCRIPT_PATH),
+        input_url,
+        str(output_path),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        cwd=str(_V2_WORKDIR),
+        env=env,
+    )
+    try:
+        stdout_bytes, stderr_bytes = await process.communicate()
+    except asyncio.CancelledError:
+        process.kill()
+        await process.wait()
+        raise
+
+    if process.returncode != 0:
+        stdout_text = stdout_bytes.decode("utf-8", errors="replace").strip()
+        stderr_text = stderr_bytes.decode("utf-8", errors="replace").strip()
+        message = stderr_text or stdout_text or "unknown renderer error"
+        raise RenderExecutionError(f"v2 renderer failed: {message}")
+
+    return output_path
