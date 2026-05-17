@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CALLER_COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME-}"
+CALLER_COMPOSE_PROJECT_NAME_SET=0
+
+if [[ -n "${COMPOSE_PROJECT_NAME+x}" ]]; then
+  CALLER_COMPOSE_PROJECT_NAME_SET=1
+fi
+
+if [[ "$CALLER_COMPOSE_PROJECT_NAME_SET" -eq 1 ]]; then
+  COMPOSE_PROJECT_NAME="$CALLER_COMPOSE_PROJECT_NAME"
+elif [[ -z "${COMPOSE_PROJECT_NAME:-}" ]]; then
+  COMPOSE_PROJECT_NAME="$(basename "$REPO_ROOT")"
+fi
+
+export COMPOSE_PROJECT_NAME
+DOCKER_COMPOSE_BIN=${DOCKER_COMPOSE_BIN:-docker compose}
+
+cd "$REPO_ROOT"
+exec $DOCKER_COMPOSE_BIN "$@"

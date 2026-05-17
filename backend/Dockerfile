@@ -4,15 +4,27 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     HOME=/tmp \
-    XDG_CACHE_HOME=/tmp/.cache
+    XDG_CACHE_HOME=/tmp/.cache \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip && pip install -r /tmp/requirements.txt
 
+# Install a supported Node.js LTS runtime for the v2 renderer.
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY v2/package.json /app/v2/package.json
+COPY v2/package-lock.json /app/v2/package-lock.json
+RUN npm --prefix /app/v2 ci --omit=dev --no-audit --no-fund && \
+    npm --prefix /app/v2 run install-browsers
+
 COPY backend /app/backend
 COPY v1 /app/v1
+COPY v2/index.js /app/v2/index.js
 COPY backend/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

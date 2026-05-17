@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Trade Balance Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1B365D;
+            --navy-light: #2A4A7F;
+            --deep-red: #B22234;
+            --deep-red-light: #D64D5E;
+            --neutral-gray: #6B7280;
+            --light-gray: #F3F4F6;
+            --lighter-gray: #E5E7EB;
+            --white: #FFFFFF;
+            --dark: #111827;
+            --success: #059669;
+            --warning: #D97706;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light-gray);
+        }
+
+        .slide {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            background: var(--white);
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        h1 {
+            font-size: 72px;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 56px;
+            line-height: 1.2;
+        }
+
+        h3 {
+            font-size: 36px;
+            line-height: 1.3;
+        }
+
+        p,
+        li {
+            font-size: 24px;
+            line-height: 1.6;
+            color: var(--dark);
+        }
+
+        .small-text {
+            font-size: 20px;
+        }
+
+        .accent-text {
+            color: var(--deep-red);
+        }
+
+        /* Slide 1: Title */
+        .slide-title {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.5;
+        }
+
+        .title-content {
+            text-align: center;
+            z-index: 1;
+            padding: 60px;
+        }
+
+        .title-content h1 {
+            color: var(--white);
+            font-size: 84px;
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+        }
+
+        .title-content .subtitle {
+            color: rgba(255,255,255,0.85);
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 60px;
+        }
+
+        .title-meta {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 40px;
+        }
+
+        .title-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.7);
+            font-size: 20px;
+        }
+
+        .title-meta-item svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--deep-red-light);
+        }
+
+        .accent-bar {
+            width: 120px;
+            height: 6px;
+            background: var(--deep-red);
+            margin: 0 auto 40px;
+            border-radius: 3px;
+        }
+
+        .decorative-lines {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .decorative-lines::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 40px,
+                rgba(178, 34, 52, 0.1) 40px,
+                rgba(178, 34, 52, 0.1) 42px
+            );
+        }
+
+        /* Content Slides */
+        .slide-content {
+            padding: 80px 100px;
+        }
+
+        .slide-header {
+            margin-bottom: 60px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--lighter-gray);
+            padding-bottom: 30px;
+        }
+
+        .slide-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 120px;
+            font-weight: 800;
+            color: var(--lighter-gray);
+            line-height: 0.8;
+        }
+
+        /* Executive Summary */
+        .takeaway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+        }
+
+        .takeaway-card {
+            background: var(--light-gray);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            border-left: 6px solid var(--deep-red);
+            transition: transform 0.3s ease;
+        }
+
+        .takeaway-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .takeaway-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--navy);
+            opacity: 0.15;
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+
+        .takeaway-card h3 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: var(--navy);
+        }
+
+        .takeaway-card p {
+            font-size: 22px;
+            color: var(--neutral-gray);
+        }
+
+        /* Agenda */
+        .agenda-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .agenda-item {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 24px 32px;
+            background: var(--white);
+            border: 2px solid var(--lighter-gray);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .agenda-item:hover {
+            border-color: var(--navy);
+            box-shadow: 0 8px 24px rgba(27, 54, 93, 0.1);
+        }
+
+        .agenda-num {
+            width: 48px;
+            height: 48px;
+            background: var(--navy);
+            color: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .agenda-text {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        /* Key Concepts */
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .concept-card {
+            background: var(--white);
+            border: 2px solid var(--lighter-gray);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .concept-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .concept-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--white);
+        }
+
+        .concept-card h3 {
+            font-size: 26px;
+            margin-bottom: 16px;
+        }
+
+        .concept-card p {
+            font-size: 20px;
+            color: var(--neutral-gray);
+        }
+
+        /* Data Sources */
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 50px;
+        }
+
+        .source-column h3 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            padding-bottom: 16px;
+            border-bottom: 3px solid var(--deep-red);
+            display: inline-block;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .source-badge {
+            background: var(--navy);
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .source-info h4 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .source-info p {
+            font-size: 18px;
+            color: var(--neutral-gray);
+        }
+
+        /* Chart Styles */
+        .chart-container {
+            background: var(--light-gray);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 20px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 24px;
+        }
+
+        .line-chart {
+            height: 300px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: 4px 4px 0 0;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar.negative {
+            background: linear-gradient(to bottom, var(--deep-red) 0%, var(--deep-red-light) 100%);
+            border-radius: 0 0 4px 4px;
+            margin-top: auto;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        .chart-axis {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--neutral-gray);
+        }
+
+        .time-series {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 350px;
+            position: relative;
+        }
+
+        .time-line {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .trend-line {
+            position: absolute;
+            bottom: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--neutral-gray);
+            opacity: 0.3;
+        }
+
+        /* Stats Callout */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--white);
+            border: 2px solid var(--lighter-gray);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--navy);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-value.negative {
+            color: var(--deep-red);
+        }
+
+        .stat-value.positive {
+            color: var(--success);
+        }
+
+        .stat-label {
+            font-size: 18px;
+            color: var(--neutral-gray);
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 16px;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .stat-change.up {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success);
+        }
+
+        .stat-change.down {
+            background: rgba(178, 34, 52, 0.1);
+            color: var(--deep-red);
+        }
+
+        /* Pie Chart */
+        .pie-container {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .pie-chart {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                var(--navy) 0deg 180deg,
+                var(--deep-red) 180deg 280deg,
+                var(--navy-light) 280deg 360deg
+            );
+        }
+
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            background: var(--white);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pie-center-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .pie-center-label {
+            font-size: 14px;
+            color: var(--neutral-gray);
+        }
+
+        .pie-legend {
+            flex: 1;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .legend-text {
+            flex: 1;
+        }
+
+        .legend-label {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .legend-value {
+            font-size: 16px;
+            color: var(--neutral-gray);
+        }
+
+        /* Map Placeholder */
+        .map-container {
+            background: linear-gradient(135deg, var(--light-gray) 0%, var(--lighter-gray) 100%);
+            border-radius: 20px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed var(--neutral-gray);
+        }
+
+        .map-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .map-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: var(--white);
+        }
+
+        .map-text {
+            font-size: 24px;
+            color: var(--neutral-gray);
+            font-weight: 500;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+
+        .column h3 {
+            font-size: 28px;
+            margin-bottom: 24px;
+            color: var(--navy);
+        }
+
+        /* Driver Cards */
+        .driver-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .driver-card {
+            background: var(--white);
+            border: 2px solid var(--lighter-gray);
+            border-radius: 16px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .driver-card:hover {
+            border-color: var(--navy);
+            box-shadow: 0 12px 32px rgba(27, 54, 93, 0.12);
+        }
+
+        .driver-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .driver-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .driver-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--navy);
+        }
+
+        .driver-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .driver-card p {
+            font-size: 18px;
+            color: var(--neutral-gray);
+            line-height: 1.5;
+        }
+
+        /* Impact Section */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+        }
+
+        .impact-card {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            color: var(--white);
+        }
+
+        .impact-card svg {
+            width: 48px;
+            height: 48px;
+            stroke: var(--deep-red-light);
+            margin-bottom: 16px;
+        }
+
+        .impact-card h4 {
+            font-size: 24px;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+
+        .impact-card p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Outlook */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .scenario-card {
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scenario-card.baseline {
+            background: var(--light-gray);
+            border: 2px solid var(--navy);
+        }
+
+        .scenario-card.upside {
+            background: rgba(5, 150, 105, 0.08);
+            border: 2px solid var(--success);
+        }
+
+        .scenario-card.downside {
+            background: rgba(178, 34, 52, 0.08);
+            border: 2px solid var(--deep-red);
+        }
+
+        .scenario-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .baseline .scenario-badge {
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .upside .scenario-badge {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .downside .scenario-badge {
+            background: var(--deep-red);
+            color: var(--white);
+        }
+
+        .scenario-card h3 {
+            font-size: 26px;
+            margin-bottom: 16px;
+        }
+
+        .scenario-card p {
+            font-size: 18px;
+            color: var(--neutral-gray);
+            margin-bottom: 12px;
+        }
+
+        /* Conclusion */
+        .conclusion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+
+        .conclusion-list {
+            list-style: none;
+        }
+
+        .conclusion-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+            font-size: 22px;
+        }
+
+        .conclusion-list li::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--deep-red);
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 10px;
+        }
+
+        .recommendation-box {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: var(--white);
+        }
+
+        .recommendation-box h3 {
+            color: var(--white);
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+
+        .recommendation-box p {
+            color: rgba(255,255,255,0.9);
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        /* Sources */
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .source-category {
+            background: var(--light-gray);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .source-category h4 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--deep-red);
+        }
+
+        .source-category ul {
+            list-style: none;
+        }
+
+        .source-category li {
+            font-size: 18px;
+            color: var(--neutral-gray);
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .source-category li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--navy);
+        }
+
+        /* Partners Table */
+        .partners-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .partners-table th {
+            background: var(--navy);
+            color: var(--white);
+            padding: 20px;
+            text-align: left;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .partners-table th:first-child {
+            border-radius: 12px 0 0 0;
+        }
+
+        .partners-table th:last-child {
+            border-radius: 0 12px 0 0;
+        }
+
+        .partners-table td {
+            padding: 20px;
+            border-bottom: 1px solid var(--lighter-gray);
+            font-size: 18px;
+        }
+
+        .partners-table tr:hover {
+            background: var(--light-gray);
+        }
+
+        .balance-positive {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .balance-negative {
+            color: var(--deep-red);
+            font-weight: 600;
+        }
+
+        /* Stacked Bar */
+        .stacked-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .stacked-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stacked-bar-label {
+            width: 150px;
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--dark);
+            flex-shrink: 0;
+        }
+
+        .stacked-bar {
+            flex: 1;
+            height: 40px;
+            background: var(--light-gray);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .stacked-segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stacked-value {
+            width: 100px;
+            text-align: right;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        /* SVG Line Chart */
+        .svg-chart {
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Bullet List */
+        .bullet-list {
+            list-style: none;
+        }
+
+        .bullet-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-left: 0;
+        }
+
+        .bullet-list li svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--deep-red);
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(178, 34, 52, 0.1) 0%, rgba(27, 54, 93, 0.1) 100%);
+            border-left: 6px solid var(--deep-red);
+            padding: 30px;
+            border-radius: 0 16px 16px 0;
+            margin: 30px 0;
+        }
+
+        .highlight-box p {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--navy);
+        }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Title -->
+    <section class="slide slide-title">
+        <div class="decorative-lines"></div>
+        <div class="title-content">
+            <div class="accent-bar"></div>
+            <h1>US Trade Balance Overview</h1>
+            <p class="subtitle">Understanding America's Position in Global Trade</p>
+            <div class="title-meta">
+                <div class="title-meta-item">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                    <span>Economic Analysis Division</span>
+                </div>
+                <div class="title-meta-item">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                    <span>January 2025</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 2: Executive Summary -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Executive Summary</h2>
+            <span class="slide-number">02</span>
+        </div>
+        <div class="takeaway-grid">
+            <div class="takeaway-card">
+                <span class="takeaway-number">01</span>
+                <h3>Persistent Trade Deficit</h3>
+                <p>The US has maintained a trade deficit since 1975, reaching $773 billion in 2023, driven by strong domestic demand and global supply chains.</p>
+            </div>
+            <div class="takeaway-card">
+                <span class="takeaway-number">02</span>
+                <h3>Services Surplus Offset</h3>
+                <p>While goods trade shows significant deficit, services trade maintains a $280 billion surplus, partially offsetting the overall imbalance.</p>
+            </div>
+            <div class="takeaway-card">
+                <span class="takeaway-number">03</span>
+                <h3>China Remains Top Partner</h3>
+                <p>China, Mexico, and Canada are the largest trading partners, with recent policy shifts reshaping bilateral trade dynamics.</p>
+            </div>
+            <div class="takeaway-card">
+                <span class="takeaway-number">04</span>
+                <h3>Policy Landscape Evolving</h3>
+                <p>Tariffs, trade agreements, and supply‑chain restructuring are reshaping US trade patterns with significant economic implications.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 3: Agenda -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Agenda</h2>
+            <span class="slide-number">03</span>
+        </div>
+        <div class="agenda-list">
+            <div class="agenda-item">
+                <span class="agenda-num">1</span>
+                <span class="agenda-text">Key Concepts &amp; Definitions</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">2</span>
+                <span class="agenda-text">Measurement &amp; Data Sources</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">3</span>
+                <span class="agenda-text">Historical Trends</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">4</span>
+                <span class="agenda-text">Current State Analysis</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">5</span>
+                <span class="agenda-text">Trade Composition by Category</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">6</span>
+                <span class="agenda-text">Major Trading Partners</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">7</span>
+                <span class="agenda-text">Drivers &amp; Determinants</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">8</span>
+                <span class="agenda-text">Economic Impacts &amp; Policy</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">9</span>
+                <span class="agenda-text">Outlook &amp; Scenarios</span>
+            </div>
+            <div class="agenda-item">
+                <span class="agenda-num">10</span>
+                <span class="agenda-text">Conclusions &amp; Recommendations</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 4: Key Concepts -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Key Concepts &amp; Definitions</h2>
+            <span class="slide-number">04</span>
+        </div>
+        <div class="concept-grid">
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    </svg>
+                </div>
+                <h3>Trade Balance</h3>
+                <p>The difference between the value of a nation's exports and imports over a specific period.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    </svg>
+                </div>
+                <h3>Surplus vs. Deficit</h3>
+                <p>Surplus: Exports exceed imports. Deficit: Imports exceed exports. US has run deficits since 1975.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
+                <h3>Goods vs. Services</h3>
+                <p>Goods: Physical products. Services: Intangible offerings like finance, consulting, and tourism.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+                    </svg>
+                </div>
+                <h3>Current Account</h3>
+                <p>Broader measure including trade balance, net income from abroad, and net transfers.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                    </svg>
+                </div>
+                <h3>Bilateral Balance</h3>
+                <p>Trade balance with a specific country. Can vary significantly across partners.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">
+                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
+                    </svg>
+                </div>
+                <h3>Trade-to-GDP Ratio</h3>
+                <p>Measures trade openness. US ratio is ~24%, lower than many developed economies.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 5: Measurement & Data Sources -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Measurement &amp; Data Sources</h2>
+            <span class="slide-number">05</span>
+        </div>
+        <div class="source-grid">
+            <div class="source-column">
+                <h3>Primary Data Sources</h3>
+                <div class="source-item">
+                    <span class="source-badge">BEA</span>
+                    <div class="source-info">
+                        <h4>Bureau of Economic Analysis</h4>
+                        <p>Monthly and quarterly trade statistics, GDP impact analysis</p>
+                    </div>
+                </div>
+                <div class="source-item">
+                    <span class="source-badge">Census</span>
+                    <div class="source-info">
+                        <h4>U.S. Census Bureau</h4>
+                        <p>Detailed goods trade by commodity and partner country</p>
+                    </div>
+                </div>
+                <div class="source-item">
+                    <span class="source-badge">IMF</span>
+                    <div class="source-info">
+                        <h4>International Monetary Fund</h4>
+                        <p>Global comparisons, Balance of Payments data</p>
+                    </div>
+                </div>
+                <div class="source-item">
+                    <span class="source-badge">WTO</span>
+                    <div class="source-info">
+                        <h4>World Trade Organization</h4>
+                        <p>Trade policy monitoring, dispute resolution data</p>
+                    </div>
+                </div>
+            </div>
+            <div class="source-column">
+                <h3>Key Metrics &amp; Frequency</h3>
+                <div class="chart-container" style="margin-top: 0;">
+                    <div class="stacked-bar-container">
+                        <div class="stacked-bar-item">
+                            <span class="stacked-bar-label">Monthly</span>
+                            <div class="stacked-bar">
+                                <div class="stacked-segment" style="width: 100%; background: var(--navy);"></div>
+                            </div>
+                            <span class="stacked-value">Goods &amp; Services</span>
+                        </div>
+                        <div class="stacked-bar-item">
+                            <span class="stacked-bar-label">Quarterly</span>
+                            <div class="stacked-bar">
+                                <div class="stacked-segment" style="width: 100%; background: var(--deep-red);"></div>
+                            </div>
+                            <span class="stacked-value">Current Account</span>
+                        </div>
+                        <div class="stacked-bar-item">
+                            <span class="stacked-bar-label">Annual</span>
+                            <div class="stacked-bar">
+                                <div class="stacked-segment" style="width: 100%; background: var(--navy-light);"></div>
+                            </div>
+                            <span class="stacked-value">Full Revisions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 30px;">
+                    <p>Data typically released 35-45 days after reference period</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 6: Historical Trends -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Historical Trends</h2>
+            <span class="slide-number">06</span>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">$773B</div>
+                <div class="stat-label">2023 Trade Deficit</div>
+                <span class="stat-change down">▼ 18.7% from 2022</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1975</div>
+                <div class="stat-label">Last Annual Surplus</div>
+                <span class="stat-change">50 years of deficits</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$918B</div>
+                <div class="stat-label">Peak Deficit (2006)</div>
+                <span class="stat-change down">Pre‑Financial Crisis</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value positive">3.7%</div>
+                <div class="stat-label">Trade as % of GDP</div>
+                <span class="stat-change up">Deficit contribution</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">US Trade Balance Over Time (Billions USD)</div>
+            <svg class="svg-chart" viewBox="0 0 1600 280">
+                <!-- Grid lines -->
+                <line x1="80" y1="40" x2="80" y2="240" stroke="#E5E7EB" stroke-width="1"/>
+                <line x1="80" y1="240" x2="1520" y2="240" stroke="#6B7280" stroke-width="2"/>
+                <line x1="80" y1="140" x2="1520" y2="140" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="5,5"/>
+                <!-- Zero line -->
+                <line x1="80" y1="180" x2="1520" y2="180" stroke="#6B7280" stroke-width="1"/>
+                <!-- Labels -->
+                <text x="70" y="45" font-size="14" fill="#6B7280" text-anchor="end">$200B</text>
+                <text x="70" y="145" font-size="14" fill="#6B7280" text-anchor="end">$0</text>
+                <text x="70" y="185" font-size="14" fill="#6B7280" text-anchor="end">-$200B</text>
+                <text x="70" y="245" font-size="14" fill="#6B7280" text-anchor="end">-$800B</text>
+                <!-- Year labels -->
+                <text x="100" y="265" font-size="14" fill="#6B7280" text-anchor="middle">1980</text>
+                <text x="300" y="265" font-size="14" fill="#6B7280" text-anchor="middle">1990</text>
+                <text x="500" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2000</text>
+                <text x="700" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2006</text>
+                <text x="900" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2010</text>
+                <text x="1100" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2015</text>
+                <text x="1300" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2020</text>
+                <text x="1480" y="265" font-size="14" fill="#6B7280" text-anchor="middle">2024</text>
+                <!-- Trade balance line (area) -->
+                <path d="M100,160 L200,155 L300,165 L400,175 L500,185 L600,200 L700,220 L800,210 L900,205 L1000,195 L1100,200 L1200,190 L1300,195 L1400,185 L1480,180 Z"
+                      fill="rgba(178, 34, 52, 0.2)"/>
+                <!-- Key events markers -->
+                <circle cx="700" cy="220" r="8" fill="#B22234"/>
+                <text x="700" y="205" font-size="12" fill="#B22234" text-anchor="middle" font-weight="600">Peak Deficit</text>
+                <circle cx="1300" cy="195" r="8" fill="#1B365D"/>
+                <text x="1300" y="180" font-size="12" fill="#1B365D" text-anchor="middle" font-weight="600">COVID Impact</text>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Slide 7: Current State -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Current State (2024)</h2>
+            <span class="slide-number">07</span>
+        </div>
+        <div class="two-column">
+            <div class="column">
+                <h3>Latest Figures</h3>
+                <div class="stats-row" style="flex-wrap: wrap;">
+                    <div class="stat-card" style="flex: 1 1 45%;">
+                        <div class="stat-value negative">-$773B</div>
+                        <div class="stat-label">Total Trade Balance</div>
+                    </div>
+                    <div class="stat-card" style="flex: 1 1 45%;">
+                        <div class="stat-value">-$1.06T</div>
+                        <div class="stat-label">Goods Deficit</div>
+                    </div>
+                    <div class="stat-card" style="flex: 1 1 45%;">
+                        <div class="stat-value positive">+$280B</div>
+                        <div class="stat-label">Services Surplus</div>
+                    </div>
+                    <div class="stat-card" style="flex: 1 1 45%;">
+                        <div class="stat-value">$5.1T</div>
+                        <div class="stat-label">Total Trade Volume</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <p>Goods deficit narrowed 10 % in 2024 while services surplus expanded 8 %</p>
+                </div>
+            </div>
+            <div class="column">
+                <h3>Monthly Trend (2024)</h3>
+                <div class="chart-container">
+                    <svg viewBox="0 0 600 280" width="100%" height="280">
+                        <line x1="40" y1="240" x2="580" y2="240" stroke="#6B7280" stroke-width="2"/>
+                        <line x1="40" y1="40" x2="40" y2="240" stroke="#E5E7EB" stroke-width="1"/>
+                        <!-- Bars -->
+                        <rect x="60" y="160" width="35" height="80" fill="#1B365D" rx="4"/>
+                        <rect x="110" y="150" width="35" height="90" fill="#1B365D" rx="4"/>
+                        <rect x="160" y="170" width="35" height="70" fill="#1B365D" rx="4"/>
+                        <rect x="210" y="155" width="35" height="85" fill="#1B365D" rx="4"/>
+                        <rect x="260" y="165" width="35" height="75" fill="#1B365D" rx="4"/>
+                        <rect x="310" y="145" width="35" height="95" fill="#1B365D" rx="4"/>
+                        <rect x="360" y="140" width="35" height="100" fill="#1B365D" rx="4"/>
+                        <rect x="410" y="155" width="35" height="85" fill="#1B365D" rx="4"/>
+                        <rect x="460" y="150" width="35" height="90" fill="#1B365D" rx="4"/>
+                        <rect x="510" y="160" width="35" height="80" fill="#B22234" rx="4"/>
+                        <!-- Month labels -->
+                        <text x="77" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Jan</text>
+                        <text x="127" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Feb</text>
+                        <text x="177" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Mar</text>
+                        <text x="227" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Apr</text>
+                        <text x="277" y="258" font-size="11" fill="#6B7280" text-anchor="middle">May</text>
+                        <text x="327" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Jun</text>
+                        <text x="377" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Jul</text>
+                        <text x="427" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Aug</text>
+                        <text x="477" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Sep</text>
+                        <text x="527" y="258" font-size="11" fill="#6B7280" text-anchor="middle">Oct</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 8: Composition by Category -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Composition by Category</h2>
+            <span class="slide-number">08</span>
+        </div>
+        <div class="two-column">
+            <div class="column">
+                <h3>Exports Breakdown</h3>
+                <div class="pie-container">
+                    <div class="pie-chart" style="background: conic-gradient(#1B365D 0deg 130deg, #2A4A7F 130deg 200deg, #B22234 200deg 280deg, #6B7280 280deg 360deg);">
+                        <div class="pie-center">
+                            <div class="pie-center-value">$3.0T</div>
+                            <div class="pie-center-label">Total Exports</div>
+                        </div>
+                    </div>
+                    <div class="pie-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#1B365D;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Capital Goods</div>
+                                <div class="legend-value">36% • $1.08T</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#2A4A7F;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Services</div>
+                                <div class="legend-value">19% • $570B</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#B22234;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Consumer Goods</div>
+                                <div class="legend-value">22% • $660B</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#6B7280;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Other</div>
+                                <div class="legend-value">23% • $690B</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <h3>Imports Breakdown</h3>
+                <div class="pie-container">
+                    <div class="pie-chart" style="background: conic-gradient(#1B365D 0deg 140deg, #2A4A7F 140deg 200deg, #B22234 200deg 300deg, #6B7280 300deg 360deg);">
+                        <div class="pie-center">
+                            <div class="pie-center-value">$4.1T</div>
+                            <div class="pie-center-label">Total Imports</div>
+                        </div>
+                    </div>
+                    <div class="pie-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#1B365D;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Consumer Goods</div>
+                                <div class="legend-value">39% • $1.6T</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#2A4A7F;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Capital Goods</div>
+                                <div class="legend-value">17% • $697B</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#B22234;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Industrial Supplies</div>
+                                <div class="legend-value">28% • $1.15T</div>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#6B7280;"></div>
+                            <div class="legend-text">
+                                <div class="legend-label">Other</div>
+                                <div class="legend-value">16% • $656B</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 9: Major Trading Partners -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Major Trading Partners</h2>
+            <span class="slide-number">09</span>
+        </div>
+        <div class="two-column">
+            <div class="column">
+                <h3>Top 10 Trading Partners (2024)</h3>
+                <table class="partners-table">
+                    <thead>
+                        <tr>
+                            <th>Country</th>
+                            <th>Trade Balance</th>
+                            <th>Total Trade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mexico</td>
+                            <td class="balance-negative">-$152B</td>
+                            <td>$855B</td>
+                        </tr>
+                        <tr>
+                            <td>China</td>
+                            <td class="balance-negative">-$279B</td>
+                            <td>$575B</td>
+                        </tr>
+                        <tr>
+                            <td>Canada</td>
+                            <td class="balance-negative">-$64B</td>
+                            <td>$785B</td>
+                        </tr>
+                        <tr>
+                            <td>Germany</td>
+                            <td class="balance-negative">-$72B</td>
+                            <td>$238B</td>
+                        </tr>
+                        <tr>
+                            <td>Japan</td>
+                            <td class="balance-negative">-$68B</td>
+                            <td>$205B</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="column">
+                <h3>Regional Distribution</h3>
+                <div class="map-container">
+                    <div class="map-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20.25l-5.247-2.623A.75.75 0 013 16.956V4.294a.75.75 0 011.086-.67L9 6.174m0 14.076l6-3m-6 3V6.174m6 11.076l4.914 2.456A.75.75 0 0021 19.044V6.706a.75.75 0 00-.414-.67L15 3.286m0 13.964V3.286m0 0L9 6.174" />
+                        </svg>
+                    </div>
+                    <span class="map-text">Insert Trade Partner Map Here</span>
+                </div>
+                <div class="stacked-bar-container" style="margin-top: 30px;">
+                    <div class="stacked-bar-item">
+                        <span class="stacked-bar-label">Asia</span>
+                        <div class="stacked-bar">
+                            <div class="stacked-segment" style="width: 42%; background: var(--navy);">42%</div>
+                            <div class="stacked-segment" style="width: 25%; background: var(--deep-red);">25%</div>
+                            <div class="stacked-segment" style="width: 33%; background: var(--navy-light);">33%</div>
+                        </div>
+                    </div>
+                    <div class="stacked-bar-item">
+                        <span class="stacked-bar-label">Americas</span>
+                        <div class="stacked-bar">
+                            <div class="stacked-segment" style="width: 35%; background: var(--navy);">35%</div>
+                            <div class="stacked-segment" style="width: 30%; background: var(--deep-red);">30%</div>
+                            <div class="stacked-segment" style="width: 35%; background: var(--navy-light);">35%</div>
+                        </div>
+                    </div>
+                    <div class="stacked-bar-item">
+                        <span class="stacked-bar-label">Europe</span>
+                        <div class="stacked-bar">
+                            <div class="stacked-segment" style="width: 23%; background: var(--navy);">23%</div>
+                            <div class="stacked-segment" style="width: 45%; background: var(--deep-red);">45%</div>
+                            <div class="stacked-segment" style="width: 32%; background: var(--navy-light);">32%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 10: Drivers & Determinants -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Drivers &amp; Determinants</h2>
+            <span class="slide-number">10</span>
+        </div>
+        <div class="driver-grid">
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h4>Exchange Rates</h4>
+                </div>
+                <p>Stronger USD makes exports more expensive and imports cheaper, widening the deficit.</p>
+            </div>
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                        </svg>
+                    </div>
+                    <h4>Domestic Demand</h4>
+                </div>
+                <p>Strong US consumer spending drives import growth, especially in consumer goods.</p>
+            </div>
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                    </div>
+                    <h4>Energy Markets</h4>
+                </div>
+                <p>US energy independence has reduced oil imports, partially offsetting goods deficit.</p>
+            </div>
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                    </div>
+                    <h4>Trade Policy</h4>
+                </div>
+                <p>Tariffs, quotas, and trade agreements directly impact bilateral trade flows.</p>
+            </div>
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                    </div>
+                    <h4>Supply Chains</h4>
+                </div>
+                <p>Global value chains and offshoring have integrated US production with foreign markets.</p>
+            </div>
+            <div class="driver-card">
+                <div class="driver-header">
+                    <div class="driver-icon">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                        </svg>
+                    </div>
+                    <h4>Competitiveness</h4>
+                </div>
+                <p>Productivity, innovation, and cost structure affect US export competitiveness globally.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 11: Economic Impacts & Policy -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Economic Impacts &amp; Policy Responses</h2>
+            <span class="slide-number">11</span>
+        </div>
+        <div class="impact-grid" style="margin-bottom: 50px;">
+            <div class="impact-card">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+                <h4>GDP Impact</h4>
+                <p>Trade deficit subtracts from GDP growth; net exports component typically negative</p>
+            </div>
+            <div class="impact-card">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+                <h4>Employment</h4>
+                <p>Mixed effects: manufacturing jobs lost, but export sectors and services gain employment</p>
+            </div>
+            <div class="impact-card">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                </svg>
+                <h4>Inflation</h4>
+                <p>Imports help contain inflation; tariffs can increase consumer prices</p>
+            </div>
+            <div class="impact-card">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                <h4>Investment</h4>
+                <p>Foreign capital inflows finance deficit, supporting investment and asset prices</p>
+            </div>
+        </div>
+        <div class="two-column">
+            <div class="column">
+                <h3>Key Policy Tools</h3>
+                <ul class="bullet-list">
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Tariffs on specific goods or countries</span>
+                    </li>
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Free trade agreements (USMCA, CPTPP)</span>
+                    </li>
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Currency intervention &amp; monetary policy</span>
+                    </li>
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Export promotion programs</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="column">
+                <h3>Recent Policy Actions</h3>
+                <ul class="bullet-list">
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                        </svg>
+                        <span>Section 301 tariffs on China ($300 B+ goods)</span>
+                    </li>
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                        </svg>
+                        <span>USMCA implementation (2020)</span>
+                    </li>
+                    <li>
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                        </svg>
+                        <span>CHIPS Act &amp; supply‑chain initiatives</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 12: Outlook & Scenarios -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Outlook, Risks &amp; Scenarios</h2>
+            <span class="slide-number">12</span>
+        </div>
+        <div class="scenario-grid">
+            <div class="scenario-card baseline">
+                <span class="scenario-badge">Baseline</span>
+                <h3>Moderate Deficit</h3>
+                <p style="font-size: 36px; font-weight: 700; color: var(--navy); margin: 20px 0;">-$750B</p>
+                <p>Continued gradual narrowing as reshoring progresses and services exports grow</p>
+                <p style="margin-top: 20px; font-size: 16px; color: var(--navy); font-weight: 600;">Probability: 55 %</p>
+            </div>
+            <div class="scenario-card upside">
+                <span class="scenario-badge">Upside</span>
+                <h3>Deficit Contraction</h3>
+                <p style="font-size: 36px; font-weight: 700; color: var(--success); margin: 20px 0;">-$620B</p>
+                <p>Strong services growth, energy exports, and successful trade negotiations narrow deficit significantly</p>
+                <p style="margin-top: 20px; font-size: 16px; color: var(--success); font-weight: 600;">Probability: 25 %</p>
+            </div>
+            <div class="scenario-card downside">
+                <span class="scenario-badge">Downside</span>
+                <h3>Deficit Expansion</h3>
+                <p style="font-size: 36px; font-weight: 700; color: var(--deep-red); margin: 20px 0;">-$900B</p>
+                <p>Dollar strength, recession abroad, and trade tensions widen deficit to near‑record levels</p>
+                <p style="margin-top: 20px; font-size: 16px; color: var(--deep-red); font-weight: 600;">Probability: 20 %</p>
+            </div>
+        </div>
+        <div class="stats-row" style="margin-top: 50px;">
+            <div class="stat-card">
+                <div class="stat-value">2.1%</div>
+                <div class="stat-label">Projected Export Growth</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1.5%</div>
+                <div class="stat-label">Projected Import Growth</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">$85B</div>
+                <div class="stat-label">Annual Deficit Reduction</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 13: Conclusion & Recommendations -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Conclusion &amp; Recommendations</h2>
+            <span class="slide-number">13</span>
+        </div>
+        <div class="conclusion-grid">
+            <div>
+                <h3 style="margin-bottom: 30px;">Key Takeaways</h3>
+                <ul class="conclusion-list">
+                    <li>The US trade deficit is structural, driven by consumption patterns and global supply chains</li>
+                    <li>Services trade surplus partially offsets goods deficit, representing a competitive advantage</li>
+                    <li>Trade policy alone cannot eliminate the deficit without broader economic adjustments</li>
+                    <li>Supply‑chain diversification and reshoring will gradually reshape trade patterns</li>
+                </ul>
+            </div>
+            <div>
+                <div class="recommendation-box">
+                    <h3>Strategic Recommendations</h3>
+                    <p><strong>Policymakers:</strong> Focus on competitiveness, workforce development, and targeted trade agreements rather than broad protectionism.</p>
+                    <p><strong>Businesses:</strong> Diversify supply chains, leverage services export opportunities, and monitor policy developments for strategic planning.</p>
+                    <p><strong>Investors:</strong> Consider sector‑specific impacts of trade policies, currency movements, and supply‑chain shifts in portfolio decisions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 14: Sources &amp; Appendix -->
+    <section class="slide slide-content">
+        <div class="slide-header">
+            <h2>Sources &amp; Appendix</h2>
+            <span class="slide-number">14</span>
+        </div>
+        <div class="sources-grid">
+            <div class="source-category">
+                <h4>Primary Data Sources</h4>
+                <ul>
+                    <li>Bureau of Economic Analysis (BEA)</li>
+                    <li>U.S. Census Bureau Trade Data</li>
+                    <li>Federal Reserve Economic Data (FRED)</li>
+                    <li>IMF Balance of Payments Statistics</li>
+                    <li>World Trade Organization (WTO)</li>
+                </ul>
+            </div>
+            <div class="source-category">
+                <h4>Methodology Notes</h4>
+                <ul>
+                    <li>Trade balance = Exports – Imports</li>
+                    <li>Goods classified by HS codes</li>
+                    <li>Services by BPM6 categories</li>
+                    <li>Seasonally adjusted figures used</li>
+                    <li>Annual data revised quarterly</li>
+                </ul>
+            </div>
+            <div class="source-category">
+                <h4>Additional Resources</h4>
+                <ul>
+                    <li>BEA International Transactions</li>
+                    <li>USITC Trade Data Web</li>
+                    <li>ITA Trade Policy Information</li>
+                    <li>Congressional Research Service</li>
+                    <li>Peterson Institute (PIIE)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 40px;">
+            <p>Data current as of January 2025. All figures in nominal US dollars unless otherwise specified.</p>
+        </div>
+    </section>
+</body>
+</html>

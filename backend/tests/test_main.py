@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from .conftest import reload_renderer_module
 
 
-def _load_main(monkeypatch):
+def _load_main(monkeypatch, *, beta: bool = False):
     monkeypatch.setenv("ENVIRONMENT", "development")
     monkeypatch.setenv("DEVELOPMENT_MODE", "false")
     monkeypatch.setenv("ENABLE_DOCS", "false")
@@ -18,6 +18,7 @@ def _load_main(monkeypatch):
     monkeypatch.setenv("MAX_HTML_CHARS", "4000")
     monkeypatch.setenv("MAX_ASSET_BYTES", "2000")
     monkeypatch.setenv("MAX_TOTAL_ASSET_BYTES", "3000")
+    monkeypatch.setenv("BETA", "true" if beta else "false")
     return reload_renderer_module("backend.app.main")
 
 

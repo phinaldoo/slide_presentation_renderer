@@ -136,8 +136,9 @@ Alias of `/api/render` with the same behavior.
 | `html` | string | yes | Full HTML document/fragment containing renderable slides |
 | `input_files` | array | no | Optional files injected into renderer workspace |
 
-The renderer always uses the stable `v1` pipeline. Client requests must not
-include a `rendering_version` field.
+The renderer engine is selected by the server. Normal deployments use `v1`.
+Set `BETA=true` in the renderer environment to run `v2` as beta. Client
+requests must not include a `rendering_version` field.
 
 #### `input_files[]` object
 
@@ -166,7 +167,7 @@ Your HTML can reference those files directly, e.g.:
 - `200 OK`
 - `Content-Type: application/zip`
 - `Content-Disposition: attachment; filename="presentation_<version>_<timestamp>.zip"`
-- `X-Rendering-Version: v1`
+- `X-Rendering-Version: v1|v2`
 - `X-Slide-Count: <number of generated slide PNG files>`
 - Body: binary `.zip` with structure:
   - `presentation_<version>_<timestamp>.pptx`
@@ -241,7 +242,7 @@ curl -X POST "http://localhost:8080/api/render" \
   -H "Authorization: Bearer ${API_KEY}" \
   -H "Content-Type: application/json" \
   --data '{
-    "html": "<section class=\"slide\">Hello</section>"
+    "html": "<section class=\"slide\">Hello from the server-selected renderer</section>"
   }' \
   --output presentation.zip
 ```

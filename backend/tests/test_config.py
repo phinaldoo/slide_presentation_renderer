@@ -47,3 +47,12 @@ def test_validate_runtime_configuration_allows_explicit_override(monkeypatch) ->
     config = reload_renderer_module("backend.app.config")
 
     config.validate_runtime_configuration()
+
+
+def test_beta_selects_active_rendering_version(monkeypatch) -> None:
+    monkeypatch.setenv("BETA", "true")
+
+    config = reload_renderer_module("backend.app.config")
+
+    assert config.SETTINGS.beta is True
+    assert config.SETTINGS.active_rendering_version == "v2"

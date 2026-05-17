@@ -120,12 +120,14 @@ async def _run_startup_checks() -> None:
     validate_render_environment()
     logger.info(
         "slide renderer startup complete environment=%s docs_enabled=%s auth_enabled=%s "
-        "max_concurrent_renders=%d max_request_body_bytes=%d",
+        "max_concurrent_renders=%d max_request_body_bytes=%d beta=%s active_rendering_version=%s",
         SETTINGS.environment_name,
         SETTINGS.docs_enabled,
         SETTINGS.api_key_auth_enabled,
         SETTINGS.max_concurrent_renders,
         SETTINGS.max_request_body_bytes,
+        SETTINGS.beta,
+        SETTINGS.active_rendering_version,
     )
 
 

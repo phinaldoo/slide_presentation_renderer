@@ -1,0 +1,14 @@
+{
+  "name": "html-to-pptx",
+  "version": "1.0.0",
+  "description": "Converts a 1920x1080 HTML file into a pixel-perfect, fully editable PowerPoint (.pptx)",
+  "main": "index.js",
+  "scripts": {
+    "convert": "node index.js",
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "1.49.0",
+    "pptxgenjs": "3.12.0"
+  }
+}
