@@ -1,7 +1,8 @@
 # Slide Presentation Renderer
 
-Production-ready Docker deployment for HTML-to-PowerPoint rendering using:
+Slide Presentation Renderer is a sub-service of the ChatUI project. It is a Docker deployment for HTML-to-PowerPoint rendering. This is used for agentic slide creation and editing. 
 
+Technical details:
 - **FastAPI backend** for request validation/orchestration
 - **nginx frontend server** as reverse proxy/static landing page
 - **Playwright renderer**
