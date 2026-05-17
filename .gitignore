@@ -108,13 +108,6 @@ __snapshots__/
 
 
 # Custom
-.gitoldd
-/config/
-/config/**
-!/config.example/
-!/config.example/.env
-!/config.example/certs/
-!/config.example/certs/*.pem
 /certs/*
 !/certs/.gitkeep
 /nginx/default.conf

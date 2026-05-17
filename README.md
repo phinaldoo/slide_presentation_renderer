@@ -79,13 +79,16 @@ ZIP structure:
 
 Before first start:
 
-1. `cp .env.example .env`
-2. Set a real `API_KEYS` value in `.env` (16+ chars, random)
+```bash
+make setup
+```
+
+This creates `.env` from `.env.example`, syncs any new example keys into an existing `.env`, creates `./certs/`, and generates a valid `API_KEYS` value if one is missing or unsafe.
 
 `docker compose up` fails fast with a clear error if required runtime safeguards are invalid, including missing `API_KEYS`.
 
 ```bash
-docker compose up -d --build
+make up
 ```
 
 Service URL:
