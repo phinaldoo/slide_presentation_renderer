@@ -183,6 +183,23 @@ docker compose -f docker-compose.yml restart
 
 ## Security
 
+### Public Exposure Checklist
+
+Do not expose this service to the internet or a shared network until all of the following are true:
+
+- `API_KEY_AUTH_ENABLED=true` and `API_KEYS` contains fresh, long, random secrets created for this deployment.
+- Traffic is protected by TLS, either with `FRONTEND_USE_HTTPS=true` or by placing the service behind a TLS-terminating reverse proxy/load balancer.
+- `ALLOWED_HOSTS` is restricted to the real hostname or hostnames that should serve this instance. Do not use `ALLOWED_HOSTS=*` outside local development.
+- `DEVELOPMENT_MODE=false`, `ENABLE_DOCS=false`, and `ALLOW_INSECURE_PRODUCTION_CONFIGURATION=false`.
+- Real secrets and certificate private keys are stored outside source control and rotated if they were ever shared, logged, or used in another environment.
+
+If you publish a self-hosted instance, treat every render request as untrusted code execution inside Chromium. Uploaded HTML can run JavaScript while it is rendered. The renderer blocks non-local browser requests during rendering and the Docker Compose stack applies resource limits, but public instances still need operational protections:
+
+- Keep nginx or an upstream reverse proxy rate limits enabled and tune them for your expected users.
+- Keep strict CPU, memory, process, request-size, slide-count, asset-size, timeout, and output-size limits.
+- Monitor logs, health checks, render latency, error rates, `429` responses, and container restarts.
+- Prefer outbound network restrictions at the host, firewall, or orchestrator layer so the renderer container cannot reach internal services or the public internet except where deliberately required.
+
 ### Vulnerability Disclosure
 
 Please see [SECURITY.md](./SECURITY.md) for details on how to report security vulnerabilities.
@@ -267,17 +284,17 @@ See `.env.example` for the source defaults. `setup.sh` and `setup.ps1` create `.
 | Variable | Default | Description | Best practices |
 | --- | --- | --- | --- |
 | `ENVIRONMENT` | `development` | Deployment environment name. Production guardrails are enforced when this is `production` or `prod`. | Use `development` locally, `staging` for pre-production, and `production` for live deployments. |
-| `NGINX_PORT` | `8080` | Public host port exposed by the nginx reverse proxy. | Keep `8080` locally unless it conflicts. In production, put the service behind a reverse proxy or load balancer and expose only the required port. |
-| `FRONTEND_USE_HTTPS` | `false` | Enables HTTPS in the nginx container using certificate files mounted from `./certs`. | Keep `false` locally unless you need HTTPS testing. Use `true` in production only when valid cert and key files are mounted. |
+| `NGINX_PORT` | `8080` | Public host port exposed by the nginx reverse proxy. | Keep `8080` locally unless it conflicts. In production, put the service behind a reverse proxy or load balancer and expose only the required TLS-protected port. |
+| `FRONTEND_USE_HTTPS` | `false` | Enables HTTPS in the nginx container using certificate files mounted from `./certs`. | Keep `false` locally unless you need HTTPS testing. Use `true` in production when nginx terminates TLS, or terminate TLS at an upstream reverse proxy/load balancer. |
 | `FRONTEND_SSL_CERT_PATH` | `/certs/fullchain.pem` | Certificate file path inside the nginx container. | Keep the default when using `./certs/fullchain.pem`. Change only if your mounted certificate path differs. |
 | `FRONTEND_SSL_KEY_PATH` | `/certs/privkey.pem` | Private key file path inside the nginx container. | Keep the default when using `./certs/privkey.pem`. Protect this file and never commit real private keys. |
 | `FRONTEND_SSL_CHAIN_PATH` | empty | Optional CA or intermediate chain path used by nginx `ssl_trusted_certificate`. | Leave empty unless your certificate provider requires a separate trusted chain file. |
 | `DEVELOPMENT_MODE` | `false` | Enables development behavior, including docs exposure. | Keep `false` by default. Never enable this in production. |
 | `ENABLE_DOCS` | `false` | Controls FastAPI `/docs` and `/openapi.json` exposure when not overridden by `DEVELOPMENT_MODE`. | Keep `false` in production. Enable only for local debugging or restricted non-production environments. |
 | `ALLOW_INSECURE_PRODUCTION_CONFIGURATION` | `false` | Allows startup even when production guardrails detect unsafe settings. | Keep `false`. Set `true` only for a deliberate temporary exception that has been reviewed. |
-| `ALLOWED_HOSTS` | `*` | Trusted host allowlist for FastAPI host validation. Supports comma-separated hostnames. | `*` is fine for local development. In production, use explicit hostnames such as `renderer.example.com`. |
+| `ALLOWED_HOSTS` | `*` | Trusted host allowlist for FastAPI host validation. Supports comma-separated hostnames. | `*` is fine for local development only. Before exposing the service, use explicit hostnames such as `renderer.example.com`. |
 | `API_KEY_AUTH_ENABLED` | `true` | Enables API key authentication for render requests. | Keep `true` in production and shared environments. Disable only for isolated local debugging. |
-| `API_KEYS` | empty | Comma-separated API keys accepted by the backend. All keys must be at least 16 characters. | Let setup generate a strong local key. In production, use long random secrets, rotate by temporarily listing old and new keys, and store them outside source control. |
+| `API_KEYS` | empty | Comma-separated API keys accepted by the backend. All keys must be at least 16 characters. | Let setup generate a strong local key. Before exposing the service, create fresh long random secrets for that deployment, rotate by temporarily listing old and new keys, and store them outside source control. |
 | `RENDER_TIMEOUT_SECONDS` | `180` | Maximum time allowed for one render request. | Keep high enough for complex slide decks. Lower it if you need stricter resource protection. |
 | `RENDER_QUEUE_TIMEOUT_MS` | `500` | Maximum time a request waits for an available render slot before returning `429`. | Keep low for fast backpressure. Increase only if clients should wait instead of retrying. |
 | `PAGE_LOAD_TIMEOUT_MS` | `30000` | Playwright page navigation and load timeout in milliseconds. | Keep below `RENDER_TIMEOUT_SECONDS * 1000`. Increase for heavy HTML, slow assets, or complex client-side rendering. |
