@@ -54,11 +54,17 @@ services:
     environment:
       MAX_REQUEST_BODY_BYTES: ${MAX_REQUEST_BODY_BYTES:-180000000}
       RENDER_TIMEOUT_SECONDS: ${RENDER_TIMEOUT_SECONDS:-180}
+      FRONTEND_USE_HTTPS: ${FRONTEND_USE_HTTPS:-false}
+      FRONTEND_SSL_CERT_PATH: ${FRONTEND_SSL_CERT_PATH:-/certs/fullchain.pem}
+      FRONTEND_SSL_KEY_PATH: ${FRONTEND_SSL_KEY_PATH:-/certs/privkey.pem}
+      FRONTEND_SSL_CHAIN_PATH: ${FRONTEND_SSL_CHAIN_PATH:-}
     depends_on:
       backend:
         condition: service_healthy
     ports:
       - "${NGINX_PORT:-8080}:8080"
+    volumes:
+      - ./certs:/certs:ro
     restart: unless-stopped
     init: true
     read_only: true
@@ -78,7 +84,11 @@ services:
         max-size: "10m"
         max-file: "5"
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/readyz"]
+      test:
+        [
+          "CMD-SHELL",
+          "if [ \"$${FRONTEND_USE_HTTPS:-false}\" = \"true\" ]; then wget --no-check-certificate -q -O /dev/null https://127.0.0.1:8080/readyz; else wget -q -O /dev/null http://127.0.0.1:8080/readyz; fi",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3

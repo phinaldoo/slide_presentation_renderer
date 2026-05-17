@@ -92,6 +92,13 @@ Service URL:
 
 - `http://localhost:8080` (or `NGINX_PORT` from `.env`)
 
+HTTPS:
+
+- Put your certificate files in `./certs/`.
+- The default expected filenames are `./certs/fullchain.pem` and `./certs/privkey.pem`.
+- Set `FRONTEND_USE_HTTPS=true` in `.env` to serve HTTPS on `NGINX_PORT`.
+- The nginx container reads those files at `/certs/fullchain.pem` and `/certs/privkey.pem`.
+
 ## Example cURL
 
 ```bash
@@ -122,6 +129,10 @@ curl -X POST "http://localhost:8080/api/render" \
 See `.env.example` for defaults:
 
 - `NGINX_PORT`
+- `FRONTEND_USE_HTTPS`
+- `FRONTEND_SSL_CERT_PATH`
+- `FRONTEND_SSL_KEY_PATH`
+- `FRONTEND_SSL_CHAIN_PATH`
 - `ENVIRONMENT`
 - `DEVELOPMENT_MODE`
 - `ENABLE_DOCS`

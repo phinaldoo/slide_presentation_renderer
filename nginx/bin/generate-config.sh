@@ -65,8 +65,8 @@ if [ "${USE_HTTPS}" = "true" ]; then
     exit 1
   fi
 
-  CERT_PATH="${FRONTEND_SSL_CERT_PATH:-/etc/nginx/certs/fullchain.pem}"
-  KEY_PATH="${FRONTEND_SSL_KEY_PATH:-/etc/nginx/certs/privkey.pem}"
+  CERT_PATH="${FRONTEND_SSL_CERT_PATH:-/certs/fullchain.pem}"
+  KEY_PATH="${FRONTEND_SSL_KEY_PATH:-/certs/privkey.pem}"
   CHAIN_PATH="${FRONTEND_SSL_CHAIN_PATH:-}" # optional
 
   python3 - "${HTTPS_TEMPLATE}" "${OUTPUT_PATH}" "${CERT_PATH}" "${KEY_PATH}" "${CHAIN_PATH}" <<'PY'

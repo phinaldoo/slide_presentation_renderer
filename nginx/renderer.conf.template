@@ -2,7 +2,7 @@ limit_req_zone $binary_remote_addr zone=api_limit_per_ip:10m rate=20r/s;
 limit_conn_zone $binary_remote_addr zone=addr_limit_per_ip:10m;
 
 server {
-    listen 8080;
+__LISTEN_BLOCK__
     server_name _;
 
     server_tokens off;
@@ -10,6 +10,7 @@ server {
     client_body_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
     keepalive_timeout 30s;
     send_timeout __UPSTREAM_TIMEOUT_SECONDS__s;
+__SSL_BLOCK__
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
@@ -17,6 +18,7 @@ server {
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
     add_header Cross-Origin-Opener-Policy "same-origin" always;
     add_header Cross-Origin-Resource-Policy "same-origin" always;
+__HSTS_HEADER__
 
     location = /livez {
         access_log off;
