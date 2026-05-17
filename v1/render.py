@@ -10,9 +10,9 @@ from playwright.async_api import async_playwright
 from pptx import Presentation
 from pptx.util import Inches
 
-# KONFIGURATION
-SELECTOR = ".slide"  # Der CSS-Selektor für deine 16:9 Abschnitte (z.B. "section", ".slide", "#main > div")
-SLIDE_BLEED = Inches(0.02)  # leichte Überlappung, um sichtbare Ränder zu vermeiden
+# Configuration
+SELECTOR = ".slide"  # CSS selector for 16:9 slide sections, e.g. "section" or ".slide"
+SLIDE_BLEED = Inches(0.02)  # Slight overlap to avoid visible slide edges
 
 
 def _is_allowed_request_url(request_url: str, allowed_origin: str | None) -> bool:
@@ -76,8 +76,8 @@ async def _render_page_to_pptx(page, prs: Presentation, selector_to_use: str) ->
     count = len(sections)
     if count == 0:
         raise RuntimeError(
-            f"Es wurden keine Elemente fuer den Selektor '{selector_to_use}' gefunden. "
-            "Stimmt der Selektor mit deiner HTML-Datei ueberein?"
+            f"No elements were found for selector '{selector_to_use}'. "
+            "Does the selector match your HTML file?"
         )
 
     for section in sections:
@@ -96,6 +96,7 @@ async def _render_page_to_pptx(page, prs: Presentation, selector_to_use: str) ->
             height=prs.slide_height + SLIDE_BLEED * 2,
         )
 
+
 async def html_to_pptx(
     html_content: str,
     *,
@@ -104,7 +105,7 @@ async def html_to_pptx(
     allowed_origin: str | None = None,
     page_load_timeout_ms: int = 30_000,
 ) -> Path:
-    """Rendert HTML-Slides (Sections) als PPTX-Datei und gibt den Speicherpfad zurück."""
+    """Render HTML slides to a PPTX file and return the saved file path."""
 
     selector_to_use = selector or SELECTOR
 
@@ -145,7 +146,7 @@ async def html_url_to_pptx(
     allowed_origin: str | None = None,
     page_load_timeout_ms: int = 30_000,
 ) -> Path:
-    """Lade HTML ueber URL und konvertiere zu PPTX."""
+    """Load HTML from a URL and convert it to PPTX."""
 
     selector_to_use = selector or SELECTOR
     prs = _create_presentation()
@@ -180,11 +181,11 @@ async def html_file_to_pptx(
     output_dir: str | Path | None = None,
     selector: str | None = None,
 ) -> Path:
-    """Hilfsfunktion: lies eine HTML-Datei ein und konvertiere sie zu PPTX."""
+    """Read an HTML file and convert it to PPTX."""
 
     html_path = Path(html_file_path)
     if not html_path.exists():
-        raise FileNotFoundError(f"HTML-Datei '{html_path}' wurde nicht gefunden.")
+        raise FileNotFoundError(f"HTML file '{html_path}' was not found.")
 
     html_content = html_path.read_text(encoding="utf-8")
     return await html_to_pptx(
