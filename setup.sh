@@ -9,11 +9,37 @@ printf 'Setting up slide presentation renderer configuration...\n\n'
 mkdir -p certs
 
 generate_api_key() {
-  python3 - <<'PY'
+  local python_cmd
+  local api_key
+
+  for python_cmd in python3 python; do
+    if command -v "$python_cmd" >/dev/null 2>&1; then
+      if api_key="$("$python_cmd" - <<'PY' 2>/dev/null
 import secrets
 
 print(secrets.token_urlsafe(48))
 PY
+      )"; then
+        printf '%s\n' "$api_key"
+        return 0
+      fi
+    fi
+  done
+
+  if command -v py >/dev/null 2>&1; then
+    if api_key="$(py -3 - <<'PY' 2>/dev/null
+import secrets
+
+print(secrets.token_urlsafe(48))
+PY
+    )"; then
+      printf '%s\n' "$api_key"
+      return 0
+    fi
+  fi
+
+  printf 'Python is required to generate API_KEYS. Install Python 3 and retry.\n' >&2
+  return 1
 }
 
 escape_sed_replacement() {

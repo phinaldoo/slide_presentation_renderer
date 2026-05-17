@@ -1,7 +1,17 @@
-SHELL := /bin/bash
 DEFAULT_GOAL := help
 
 COMPOSE := docker compose -f docker-compose.yml
+
+ifeq ($(OS),Windows_NT)
+SHELL := powershell.exe
+.SHELLFLAGS := -NoProfile -ExecutionPolicy Bypass -Command
+SETUP_COMMAND := .\setup.ps1
+SETUP_QUIET_REDIRECT := > $$null
+else
+SHELL := /bin/bash
+SETUP_COMMAND := bash ./setup.sh
+SETUP_QUIET_REDIRECT := > /dev/null
+endif
 
 .PHONY: help setup up down restart logs ps
 
@@ -16,9 +26,9 @@ help:
 
 setup:
 ifeq ($(filter setup,$(MAKECMDGOALS)),setup)
-	@bash ./setup.sh
+	@$(SETUP_COMMAND)
 else
-	@bash ./setup.sh > /dev/null
+	@$(SETUP_COMMAND) $(SETUP_QUIET_REDIRECT)
 endif
 
 up: setup
