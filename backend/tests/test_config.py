@@ -37,6 +37,34 @@ def test_validate_runtime_configuration_rejects_small_request_body_limit(monkeyp
         config.validate_runtime_configuration()
 
 
+def test_validate_runtime_configuration_rejects_invalid_integer(monkeypatch) -> None:
+    monkeypatch.setenv("MAX_CONCURRENT_RENDERS", "two")
+
+    config = reload_renderer_module("backend.app.config")
+
+    with pytest.raises(RuntimeError, match="MAX_CONCURRENT_RENDERS"):
+        config.validate_runtime_configuration()
+
+
+def test_validate_runtime_configuration_rejects_invalid_boolean(monkeypatch) -> None:
+    monkeypatch.setenv("ENABLE_DOCS", "maybe")
+
+    config = reload_renderer_module("backend.app.config")
+
+    with pytest.raises(RuntimeError, match="ENABLE_DOCS"):
+        config.validate_runtime_configuration()
+
+
+def test_validate_runtime_configuration_rejects_small_output_limit(monkeypatch) -> None:
+    monkeypatch.setenv("MAX_ASSET_BYTES", "4096")
+    monkeypatch.setenv("MAX_RENDER_OUTPUT_BYTES", "2048")
+
+    config = reload_renderer_module("backend.app.config")
+
+    with pytest.raises(RuntimeError, match="MAX_RENDER_OUTPUT_BYTES"):
+        config.validate_runtime_configuration()
+
+
 def test_validate_runtime_configuration_allows_explicit_override(monkeypatch) -> None:
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("ALLOWED_HOSTS", "*")

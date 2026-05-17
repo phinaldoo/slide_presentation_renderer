@@ -7,6 +7,7 @@ from dataclasses import dataclass
 logger = logging.getLogger("slide_renderer")
 
 _PRODUCTION_ENV_NAMES = {"prod", "production"}
+_CONFIG_PARSE_ERRORS: list[str] = []
 
 
 def _get_int(name: str, default: int, *, min_value: int) -> int:
@@ -17,8 +18,16 @@ def _get_int(name: str, default: int, *, min_value: int) -> int:
     try:
         value = int(raw)
     except ValueError:
+        _CONFIG_PARSE_ERRORS.append(
+            f"{name} must be an integer >= {min_value}; got {raw!r}"
+        )
         return default
-    return max(value, min_value)
+    if value < min_value:
+        _CONFIG_PARSE_ERRORS.append(
+            f"{name} must be an integer >= {min_value}; got {value}"
+        )
+        return min_value
+    return value
 
 
 def _get_bool(name: str, default: bool) -> bool:
@@ -26,7 +35,15 @@ def _get_bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
     if raw is None:
         return default
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    _CONFIG_PARSE_ERRORS.append(
+        f"{name} must be a boolean value (true/false); got {raw!r}"
+    )
+    return default
 
 
 def _get_csv(name: str) -> tuple[str, ...]:
@@ -57,8 +74,10 @@ class Settings:
     max_request_body_bytes: int
     max_html_chars: int
     max_input_files: int
+    max_slides: int
     max_asset_bytes: int
     max_total_asset_bytes: int
+    max_render_output_bytes: int
 
     @property
     def docs_enabled(self) -> bool:
@@ -87,14 +106,20 @@ SETTINGS = Settings(
     max_request_body_bytes=_get_int("MAX_REQUEST_BODY_BYTES", 180_000_000, min_value=1_024),
     max_html_chars=_get_int("MAX_HTML_CHARS", 2_000_000, min_value=1_000),
     max_input_files=_get_int("MAX_INPUT_FILES", 32, min_value=1),
+    max_slides=_get_int("MAX_SLIDES", 200, min_value=1),
     max_asset_bytes=_get_int("MAX_ASSET_BYTES", 25_000_000, min_value=1_024),
     max_total_asset_bytes=_get_int("MAX_TOTAL_ASSET_BYTES", 120_000_000, min_value=1_024),
+    max_render_output_bytes=_get_int(
+        "MAX_RENDER_OUTPUT_BYTES",
+        220_000_000,
+        min_value=1_024,
+    ),
 )
 
 
 def validate_runtime_configuration() -> None:
     """Validate runtime configuration and production guardrails."""
-    errors: list[str] = []
+    errors: list[str] = list(_CONFIG_PARSE_ERRORS)
     warnings: list[str] = []
 
     if SETTINGS.max_total_asset_bytes < SETTINGS.max_asset_bytes:
@@ -113,6 +138,9 @@ def validate_runtime_configuration() -> None:
 
     if SETTINGS.render_queue_timeout_ms > SETTINGS.render_timeout_seconds * 1000:
         errors.append("RENDER_QUEUE_TIMEOUT_MS must not exceed RENDER_TIMEOUT_SECONDS * 1000")
+
+    if SETTINGS.max_render_output_bytes < SETTINGS.max_asset_bytes:
+        errors.append("MAX_RENDER_OUTPUT_BYTES must be greater than or equal to MAX_ASSET_BYTES")
 
     if SETTINGS.is_production:
         if SETTINGS.development_mode:

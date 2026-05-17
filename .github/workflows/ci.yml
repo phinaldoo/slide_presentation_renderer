@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt -r backend/requirements-dev.txt
+
+      - name: Run unit tests
+        run: pytest -q
+
+      - name: Audit Python dependencies
+        run: pip-audit -r backend/requirements.txt
+
+      - name: Compile Python sources
+        run: python -m compileall -q backend v1 .github/scripts
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+
+    env:
+      API_KEYS: ci-renderer-secret-1234567890
+      API_KEY_AUTH_ENABLED: "true"
+      ENVIRONMENT: development
+      DEVELOPMENT_MODE: "false"
+      ENABLE_DOCS: "false"
+      ALLOWED_HOSTS: "*"
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Build and start stack
+        run: docker compose -f docker-compose.yml up -d --build --wait
+
+      - name: Run render smoke test through nginx
+        run: |
+          docker compose -f docker-compose.yml exec -T backend python3 - <<'PY'
+          import io
+          import json
+          import os
+          import urllib.request
+          import zipfile
+
+          html = """
+          <html>
+            <body style="margin:0">
+              <section class="slide" style="width:1920px;height:1080px;display:flex;align-items:center;justify-content:center;font-size:96px">
+                CI smoke
+              </section>
+            </body>
+          </html>
+          """
+          payload = json.dumps({"html": html}).encode("utf-8")
+          request = urllib.request.Request(
+              "http://nginx:8080/api/render",
+              data=payload,
+              headers={
+                  "Content-Type": "application/json",
+                  "X-API-Key": os.environ["API_KEYS"].split(",", 1)[0],
+              },
+              method="POST",
+          )
+          with urllib.request.urlopen(request, timeout=240) as response:
+              body = response.read()
+              if response.status != 200:
+                  raise SystemExit(f"unexpected status: {response.status}")
+              if response.headers.get("X-Slide-Count") != "1":
+                  raise SystemExit(f"unexpected slide count: {response.headers!r}")
+
+          entries = zipfile.ZipFile(io.BytesIO(body)).namelist()
+          if not any(entry.endswith(".pptx") for entry in entries):
+              raise SystemExit(f"missing pptx in archive: {entries}")
+          if "slides/slide_001.png" not in entries:
+              raise SystemExit(f"missing slide image in archive: {entries}")
+          PY
+
+      - name: Show service logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.yml logs --no-color
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker-compose.yml down -v

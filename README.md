@@ -282,11 +282,17 @@ See `.env.example` for the source defaults. `setup.sh` and `setup.ps1` create `.
 | `RENDER_QUEUE_TIMEOUT_MS` | `500` | Maximum time a request waits for an available render slot before returning `429`. | Keep low for fast backpressure. Increase only if clients should wait instead of retrying. |
 | `PAGE_LOAD_TIMEOUT_MS` | `30000` | Playwright page navigation and load timeout in milliseconds. | Keep below `RENDER_TIMEOUT_SECONDS * 1000`. Increase for heavy HTML, slow assets, or complex client-side rendering. |
 | `MAX_CONCURRENT_RENDERS` | `2` | Maximum number of render jobs that can run at the same time. | Tune based on CPU and memory. Start small; Playwright is resource-heavy. |
+| `BACKEND_MEMORY_LIMIT` | `2g` | Docker Compose memory limit for the backend renderer container. | Size for expected deck complexity and concurrency. Keep a hard limit in production. |
+| `BACKEND_CPUS` | `2.0` | Docker Compose CPU limit for the backend renderer container. | Tune with `MAX_CONCURRENT_RENDERS`; Playwright is CPU-heavy. |
+| `NGINX_MEMORY_LIMIT` | `256m` | Docker Compose memory limit for nginx. | Keep bounded unless large request buffering needs more headroom. |
+| `NGINX_CPUS` | `0.5` | Docker Compose CPU limit for nginx. | Increase only if nginx becomes the bottleneck. |
 | `MAX_REQUEST_BODY_BYTES` | `180000000` | Maximum accepted HTTP request body size in bytes. | Set to the smallest value that fits expected decks and assets. Must be at least `MAX_HTML_CHARS` and `MAX_TOTAL_ASSET_BYTES`. |
 | `MAX_HTML_CHARS` | `2000000` | Maximum number of characters accepted in the `html` request field. | Keep bounded to prevent oversized render inputs. Increase only for known large deck workloads. |
 | `MAX_INPUT_FILES` | `32` | Maximum number of files accepted in `input_files`. | Keep low unless decks genuinely need many assets. Raising this also increases validation and storage pressure. |
+| `MAX_SLIDES` | `200` | Maximum number of `.slide` elements rendered from one request. | Set to the largest deck size you intentionally support. This protects Chromium and ZIP generation from runaway documents. |
 | `MAX_ASSET_BYTES` | `25000000` | Maximum decoded size for one uploaded asset. | Keep below `MAX_TOTAL_ASSET_BYTES`. Use compressed images where possible. |
 | `MAX_TOTAL_ASSET_BYTES` | `120000000` | Maximum decoded size of all uploaded assets combined. | Keep below `MAX_REQUEST_BODY_BYTES`. Size it for expected deck assets while leaving room for HTML and request overhead. |
+| `MAX_RENDER_OUTPUT_BYTES` | `220000000` | Maximum generated output size before compression and as the final ZIP response. | Keep bounded to protect memory. Increase only after load testing with representative decks. |
 
 Important production guardrails:
 

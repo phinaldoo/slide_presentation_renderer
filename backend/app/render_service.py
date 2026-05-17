@@ -156,6 +156,14 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
         if not slide_image_paths:
             raise RenderExecutionError("renderer finished but no slide images were produced")
 
+        _validate_slide_count(len(slide_image_paths))
+
+        total_output_bytes = 0
+        total_output_bytes = _ensure_render_output_budget(
+            total_output_bytes,
+            output_path.stat().st_size,
+            output_path.name,
+        )
         pptx_content = output_path.read_bytes()
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         base_name = f"presentation_{RenderingVersion.v1.value}_{timestamp}"
@@ -165,8 +173,14 @@ async def render_presentation(request: RenderRequest) -> RenderResult:
         slide_images: list[tuple[str, bytes]] = []
         for slide_image_path in sorted(slide_image_paths):
             archive_path = f"slides/{slide_image_path.name}"
+            total_output_bytes = _ensure_render_output_budget(
+                total_output_bytes,
+                slide_image_path.stat().st_size,
+                archive_path,
+            )
             slide_images.append((archive_path, slide_image_path.read_bytes()))
         archive_content = _build_render_archive(pptx_file_name, pptx_content, slide_images)
+        _ensure_render_output_budget(0, len(archive_content), archive_file_name)
 
     return RenderResult(
         file_name=archive_file_name,
@@ -189,6 +203,25 @@ def _build_render_archive(
         for slide_image_name, slide_image_content in slide_images:
             archive.writestr(slide_image_name, slide_image_content)
     return buffer.getvalue()
+
+
+def _validate_slide_count(slide_count: int) -> None:
+    """Validate rendered slide count against configured limits."""
+    if slide_count > SETTINGS.max_slides:
+        raise RenderValidationError(
+            f"too many slides rendered (max {SETTINGS.max_slides})"
+        )
+
+
+def _ensure_render_output_budget(consumed_bytes: int, next_bytes: int, label: str) -> int:
+    """Track total generated output size and reject oversized render products."""
+    total_bytes = consumed_bytes + next_bytes
+    if total_bytes > SETTINGS.max_render_output_bytes:
+        raise RenderValidationError(
+            f"render output exceeds max size of {SETTINGS.max_render_output_bytes} "
+            f"bytes while adding {label}"
+        )
+    return total_bytes
 
 
 def _save_assets(request: RenderRequest, assets_dir: Path) -> None:
@@ -296,6 +329,7 @@ async def _render_slide_images(input_url: str, output_dir: Path, allowed_origin:
                 raise RenderExecutionError(
                     f"no slide elements found for selector '{_SLIDE_SELECTOR}'"
                 )
+            _validate_slide_count(len(sections))
 
             rendered_paths: list[Path] = []
             for slide_index, section in enumerate(sections, start=1):
@@ -316,9 +350,13 @@ async def _render_v1(input_url: str, output_dir: Path, allowed_origin: str) -> P
     """Render presentation using v1 renderer."""
     from v1.render import html_url_to_pptx
 
-    return await html_url_to_pptx(
-        input_url,
-        output_dir=output_dir,
-        allowed_origin=allowed_origin,
-        page_load_timeout_ms=SETTINGS.page_load_timeout_ms,
-    )
+    try:
+        return await html_url_to_pptx(
+            input_url,
+            output_dir=output_dir,
+            allowed_origin=allowed_origin,
+            page_load_timeout_ms=SETTINGS.page_load_timeout_ms,
+            max_slides=SETTINGS.max_slides,
+        )
+    except ValueError as exc:
+        raise RenderValidationError(str(exc)) from exc

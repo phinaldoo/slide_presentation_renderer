@@ -70,7 +70,12 @@ def _save_presentation(prs: Presentation, output_dir: str | Path | None) -> Path
     return file_path
 
 
-async def _render_page_to_pptx(page, prs: Presentation, selector_to_use: str) -> None:
+async def _render_page_to_pptx(
+    page,
+    prs: Presentation,
+    selector_to_use: str,
+    max_slides: int | None = None,
+) -> None:
     """Render page elements matching selector to PPTX slides."""
     sections = await page.locator(selector_to_use).all()
     count = len(sections)
@@ -79,6 +84,8 @@ async def _render_page_to_pptx(page, prs: Presentation, selector_to_use: str) ->
             f"No elements were found for selector '{selector_to_use}'. "
             "Does the selector match your HTML file?"
         )
+    if max_slides is not None and count > max_slides:
+        raise ValueError(f"too many slides rendered (max {max_slides})")
 
     for section in sections:
         await section.scroll_into_view_if_needed()
@@ -104,6 +111,7 @@ async def html_to_pptx(
     selector: str | None = None,
     allowed_origin: str | None = None,
     page_load_timeout_ms: int = 30_000,
+    max_slides: int | None = None,
 ) -> Path:
     """Render HTML slides to a PPTX file and return the saved file path."""
 
@@ -129,7 +137,7 @@ async def html_to_pptx(
                 )
 
             await page.wait_for_load_state("networkidle", timeout=page_load_timeout_ms)
-            await _render_page_to_pptx(page, prs, selector_to_use)
+            await _render_page_to_pptx(page, prs, selector_to_use, max_slides)
         finally:
             if context is not None:
                 await context.close()
@@ -145,6 +153,7 @@ async def html_url_to_pptx(
     selector: str | None = None,
     allowed_origin: str | None = None,
     page_load_timeout_ms: int = 30_000,
+    max_slides: int | None = None,
 ) -> Path:
     """Load HTML from a URL and convert it to PPTX."""
 
@@ -166,7 +175,7 @@ async def html_url_to_pptx(
                 timeout=page_load_timeout_ms,
             )
             await page.wait_for_load_state("networkidle", timeout=page_load_timeout_ms)
-            await _render_page_to_pptx(page, prs, selector_to_use)
+            await _render_page_to_pptx(page, prs, selector_to_use, max_slides)
         finally:
             if context is not None:
                 await context.close()
