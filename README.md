@@ -2,6 +2,8 @@
 
 Slide Presentation Renderer is a sub-service of the ChatUI project. It is a Docker deployment for HTML-to-PowerPoint rendering. This is used for agentic slide creation and editing. 
 
+> **Disclaimer:** This software is provided "as is" without any warranties. Use at your own risk. The maintainers are not liable for damages resulting from use.
+
 Technical details:
 - **FastAPI backend** for request validation/orchestration
 - **nginx reverse proxy**
@@ -328,5 +330,3 @@ Important production guardrails:
 ## License
 
 This app is licensed under the Apache License 2.0. See `LICENSE`.
-
-Disclaimer: This software is provided "as is" without any warranties. Use at your own risk. The maintainers are not liable for damages resulting from use.
